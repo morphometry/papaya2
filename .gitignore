@@ -1,0 +1,16 @@
+features.mk
+.depend
+.gdb_history
+.ts.mk.hpp
+*.o
+*.sw[op]
+*.dSYM
+perf.data*
+TRASH
+
+sersic
+runtests
+banana
+ppanalysis
+imganalysis
+pypaya2.so
