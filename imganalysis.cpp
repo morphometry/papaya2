@@ -18,6 +18,8 @@ struct PingFile
     unsigned long width_, height_;
     bytevec_t buffer_;
 
+    enum { RED, GREEN, BLUE, ALPHA };
+
     PingFile(const string &infilename)
     {
         bytevec_t png_file_data;
@@ -38,7 +40,7 @@ struct PingFile
             return 0;
         if (i == width() || j == height())
             return 0;
-        return const_cast<PingFile *>(this)->at(i, j, 0);
+        return const_cast<PingFile *>(this)->at(i, j, RED);
     }
 
     unsigned char &at(int i, int j, int c)
