@@ -36,7 +36,7 @@ struct PingFile
     {
         if (i == -1 || j == -1)
             return 0;
-        if (i == width_ || j == height_)
+        if (i == width() || j == height())
             return 0;
         return const_cast<PingFile *>(this)->at(i, j, 0);
     }
