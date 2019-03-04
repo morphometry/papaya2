@@ -178,10 +178,13 @@ void find_min_max(TYPE *min, TYPE *max, const PHOTO &photo)
 
 // result (return type) of IMT computations.
 // holds the values of the IMT's and, in addition, the area.
-// FIXME make configurable what we actually want to compute
 // FIXME proper accumulators
 struct MinkowskiAccumulator
 {
+    // for now, the upper limit in S is statically defined here, as the main
+    // cost seems to be in the geometry processing, and a few extra cexp's
+    // don't cost as much.  we leave it to the user to ignore any data she
+    // does not need.
     static const int MAX_S = 8;
 
     MinkowskiAccumulator()
