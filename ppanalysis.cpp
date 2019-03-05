@@ -51,7 +51,12 @@ int main(int argc, const char **argv)
     }
 
     if (infilename == "") {
-        std::cerr << "missing argument: input filename\n";
+        std::cerr << "input filename not set (use the 'in' argument)\n";
+        return 1;
+    }
+
+    if (outfilename == "") {
+        std::cerr << "output filename not set (use the 'out' argument)\n";
         return 1;
     }
 

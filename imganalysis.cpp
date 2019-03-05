@@ -89,6 +89,11 @@ int main(int argc, const char **argv)
         }
     }
 
+    if (outfilename == "") {
+        std::cerr << "output filename not set (use the 'out' argument)\n";
+        return 1;
+    }
+
     PingFile infile(infilename);
     Datafile outfile(outfilename);
     outfile.comment("threshold area perim q2 arg2 q3 arg3 q4 arg4 q5 arg5 q6 "

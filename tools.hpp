@@ -122,7 +122,14 @@ struct Datafile
         init();
     }
 
-    Datafile(const string &filename) : os(filename) { init(); }
+    Datafile(const string &filename) : os(filename)
+    {
+        init();
+        if (!os) {
+            throw std::runtime_error("could not open output file, \"" +
+                                     filename + "\"");
+        }
+    }
 
     friend Datafile &operator<<(Datafile &df, double x)
     {
@@ -145,6 +152,8 @@ struct Datafile
         }
         throw std::runtime_error("illegal manipulator inserted into Datafile");
     }
+
+    bool operator!() const { return !os; }
 
     void comment(const string &comment) { os << "# " << comment << "\n"; }
 

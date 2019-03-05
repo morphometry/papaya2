@@ -83,6 +83,11 @@ int main(int argc, const char **argv)
         }
     }
 
+    if (outfilename == "") {
+        std::cerr << "output filename not set (use the 'out' argument)\n";
+        return 1;
+    }
+
     FitsFile infile(infilename);
 
     if (maskfilename != "") {
