@@ -8,6 +8,7 @@
 #include <array>
 #include <cassert>
 #include <cmath>
+#include <string>
 #include <type_traits>
 
 namespace vector_math_for_std_array {
