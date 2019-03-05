@@ -6,10 +6,12 @@
 #include "papaya2.hpp"
 #include "readarg.hpp"
 #ifndef HAVE_CCFITS
-#error banana requires FITS support to build (see Makefile)
+#error banana requiresm the CCfits library to work.  (Set FITS_SUPPORT = 1.)
 #endif
 #include <CCfits/CCfits>
 #include <valarray>
+
+using namespace papaya2;
 
 struct FitsFile : Photo
 {

@@ -1,9 +1,12 @@
 # defaults
 CXXFLAGS += -g -O3
 CXXFLAGS += -Wall -Werror
-FITS_SUPPORT = 0
+# enable FITS support being able to load FITS containers (in banana)
+FITS_SUPPORT = 1
+FITS_LDFLAGS = -lCCfits -lcfitsio
+# enable CGAL support for Voronoi diagrams (in ppanalysis and in pypaya2)
 CGAL_SUPPORT = 1
-BUILD_PYTHON_MODULE = 1
+CGAL_LDFLAGS = -lCGAL -LCGAL_Core -lgmp
 
 # modify defaults here if necessary
 -include features.mk
@@ -11,18 +14,13 @@ BUILD_PYTHON_MODULE = 1
 # FITS support
 ifeq ($(FITS_SUPPORT), 1)
     CXXFLAGS += -DHAVE_CCFITS
-    LDFLAGS += -lCCfits -lcfitsio
+    LDFLAGS += $(FITS_LDFLAGS)
 endif
 
 # have CGAL for Voronoi diagrams?
 ifeq ($(CGAL_SUPPORT), 1)
     CXXFLAGS += -DHAVE_CGAL
-    LDFLAGS += -lCGAL -LCGAL_Core -lgmp
-endif
-
-# do we want to build the Python2 module?
-ifeq ($(BUILD_PYTHON_MODULE), 1)
-    CXXFLAGS += -I/usr/include/python2.7
+    LDFLAGS += $(CGAL_LDFLAGS)
 endif
 
 CXXFLAGS += -std=c++11 -fPIC
@@ -31,19 +29,10 @@ MAKEFILES = \
     Makefile \
     features.mk \
 
-TEST_SOURCES = \
-    test_image.cpp \
-    test_tools.cpp \
-    test_imt.cpp \
-
-TEST_OBJECTS = $(TEST_SOURCES:%.cpp=%.o)
-
-ALL_SOURCES = \
-    $(TEST_SOURCES) \
-    runtests.cpp \
-    sersic.cpp \
-    ppanalysis.cpp \
-    pypaya2.cpp \
+TEST_OBJECTS = \
+    test_image.o \
+    test_tools.o \
+    test_imt.o \
 
 BINARIES = \
     banana \
@@ -55,15 +44,15 @@ BINARIES = \
 default: all runtests
 	./runtests
 
-all: .ts.mk.hpp .depend imganalysis ppanalysis pypaya2.so
+all: .ts.mk.hpp imganalysis ppanalysis pypaya2.so
 
 # hack to make any code recompile if Makefile changes
 .ts.mk.hpp: $(MAKEFILES)
 	@touch $@
 
 # automagic dependencies
-.depend: $(ALL_SOURCES) *.hpp .ts.mk.hpp
-	$(CXX) $(CXXFLAGS) -MM $(ALL_SOURCES) >.depend
+depend: *.cpp *.hpp .ts.mk.hpp
+	$(CXX) $(CXXFLAGS) -MM *.cpp >.depend
 -include .depend
 
 # create features.mk if absent
@@ -86,7 +75,11 @@ sersic: sersic.o
 	$(CXX) $(CXXFLAGS) -o $@ $< $(LDFLAGS)
 
 pypaya2.so: pypaya2.o
-	$(CXX) -shared -o $@ $< $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) -shared -o $@ $< $(LDFLAGS)
+
+# special rule, needs Python headers
+pypaya2.o: pypaya2.cpp
+	$(CXX) $(CXXFLAGS) `python-config --includes` -c -o $@ $<
 
 test: runtests
 	./runtests
@@ -97,4 +90,4 @@ pretty:
 clean:
 	rm -f $(BINARIES) *.o .ts.mk.hpp
 
-.PHONY: default all test clean
+.PHONY: default all test clean pretty depend
