@@ -18,7 +18,13 @@ struct PingFile
     unsigned long width_, height_;
     bytevec_t buffer_;
 
-    enum { RED, GREEN, BLUE, ALPHA };
+    enum
+    {
+        RED,
+        GREEN,
+        BLUE,
+        ALPHA
+    };
 
     PingFile(const string &infilename)
     {

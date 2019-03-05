@@ -26,8 +26,8 @@ struct FitsFile : Photo
         // to sky coordinates.  for now, we map the entire image
         // to the unit square.
         // FIXME readAllKeys often throws a warning of the type
-        //       Fits Error: Keyword not found: HISTORY                                                                                                  
-        //       Fits Error: Keyword not found: COMMENT                                                                                                  
+        //       Fits Error: Keyword not found: HISTORY
+        //       Fits Error: Keyword not found: COMMENT
         // at this point, which is harmless.  find a way to disable it.
         phdu.readAllKeys();
         set_coordinates(0, 0, 1, 1, phdu.axis(0), phdu.axis(1));
