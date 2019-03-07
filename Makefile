@@ -38,6 +38,7 @@ BINARIES = \
     banana \
     runtests \
     sersic \
+    imganalysis \
     ppanalysis \
     pypaya2.so \
 
