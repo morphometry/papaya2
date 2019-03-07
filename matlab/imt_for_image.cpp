@@ -104,7 +104,6 @@ struct MexFunction : matlab::mex::Function
             outarray[n][4] = std::arg(imt.imt(2));
             outarray[n][5] = imt.msm(3);
             outarray[n][6] = std::arg(imt.imt(3));
-            std::cerr.precision(15);
             outarray[n][7] = imt.msm(4);
             outarray[n][8] = std::arg(imt.imt(4));
             outarray[n][9] = imt.msm(5);
