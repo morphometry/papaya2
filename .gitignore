@@ -1,6 +1,7 @@
 features.mk
 .depend
 .gdb_history
+.clang-format
 .ts.mk.hpp
 *.o
 *.sw[op]
