@@ -1,6 +1,6 @@
 // a MATLAB extension analyzing a 2D image using irreducible
 // Minkowski tensors using the preliminary Papaya2 library.
-// for an example, see sample.m
+// for an example, see imganalysis.m
 // 2019 Sebastian Kapfer <sebastian.kapfer@fau.de>
 // 2019 Jenny Wagner <j.wagner@uni-heidelberg.de>
 //
