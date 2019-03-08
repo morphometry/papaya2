@@ -32,7 +32,7 @@ inline double deg2rad(double phi) { return phi * (TWO_PI / 360.); }
 inline std::vector<double> logspace(double low, double high, int n = 10,
                                     bool include_endpoint = false)
 {
-    if (! (low > 0. && high > 0. && n > 0))
+    if (!(low > 0. && high > 0. && n > 0))
         throw std::logic_error("for logspace, arguments must be positive");
     double logincr = (log(high) - log(low)) / (n - include_endpoint);
     std::vector<double> ret;

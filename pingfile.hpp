@@ -7,14 +7,12 @@
 
 #include "picopng.hpp"
 
-namespace
-{
+namespace {
 
 using bytevec_t = std::vector<unsigned char>;
 using string = std::string;
 
-static
-void load_file(bytevec_t *buffer, const string &filename)
+static void load_file(bytevec_t *buffer, const string &filename)
 {
     std::ifstream file(filename.c_str(),
                        std::ios::in | std::ios::binary | std::ios::ate);
@@ -89,4 +87,4 @@ struct PingFile
     double pixel_height() const { return 1.; }
 };
 
-}
+} // namespace

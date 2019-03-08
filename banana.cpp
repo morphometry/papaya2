@@ -78,7 +78,8 @@ int main(int argc, const char **argv)
         } else if (string(*argv) == "numt") {
             num_thresh = read_arg<unsigned long>(argv++);
         } else if (string(*argv) == "help" || string(*argv) == "-h") {
-            std::cerr << "for help, please see https://morphometry.org/software/papaya2/\n";
+            std::cerr << "for help, please see "
+                         "https://morphometry.org/software/papaya2/\n";
             return 0;
         } else {
             std::cerr << "illegal argument: " << *argv << "\n";

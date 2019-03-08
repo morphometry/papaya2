@@ -1,7 +1,7 @@
 #include "catch.hpp"
 #include "papaya2.hpp"
-#include "test_helpers.hpp"
 #include "pingfile.hpp"
+#include "test_helpers.hpp"
 #include <sstream>
 
 using namespace papaya2;
@@ -289,23 +289,24 @@ TEST_CASE("simple marching squares IMT examples")
     SECTION("Grayscale image")
     {
         PingFile potato("validation_data/potato.png");
-        auto const imt = imt_interpolated_marching_squares(potato, 1.469734492275599e+02);
+        auto const imt =
+            imt_interpolated_marching_squares(potato, 1.469734492275599e+02);
         using std::arg;
-        CHECK(imt.area()      == approx(7.760018008530601e+04));
+        CHECK(imt.area() == approx(7.760018008530601e+04));
         CHECK(imt.perimeter() == approx(1.009820521813200e+03));
-        CHECK(imt.msm(2)      == approx(1.563708314579508e-01));
+        CHECK(imt.msm(2) == approx(1.563708314579508e-01));
         CHECK(arg(imt.imt(2)) == approx(-5.574818755549115e-1));
-        CHECK(imt.msm(3)      == approx(3.980635759575531e-02));
+        CHECK(imt.msm(3) == approx(3.980635759575531e-02));
         CHECK(arg(imt.imt(3)) == approx(4.577327494757427e-01));
-        CHECK(imt.msm(4)      == approx(1.481665040254243e-01));
+        CHECK(imt.msm(4) == approx(1.481665040254243e-01));
         CHECK(arg(imt.imt(4)) == approx(7.141179567742937e-01));
-        CHECK(imt.msm(5)      == approx(1.922804813953316e-01));
+        CHECK(imt.msm(5) == approx(1.922804813953316e-01));
         CHECK(arg(imt.imt(5)) == approx(2.070654574313143e+00));
-        CHECK(imt.msm(6)      == approx(1.454253098691293e-01));
+        CHECK(imt.msm(6) == approx(1.454253098691293e-01));
         CHECK(arg(imt.imt(6)) == approx(-2.519436436486195e-1));
-        CHECK(imt.msm(7)      == approx(7.671564980492507e-03));
+        CHECK(imt.msm(7) == approx(7.671564980492507e-03));
         CHECK(arg(imt.imt(7)) == approx(1.404644402590062e+00));
-        CHECK(imt.msm(8)      == approx(1.860509319491248e-01));
+        CHECK(imt.msm(8) == approx(1.860509319491248e-01));
         CHECK(arg(imt.imt(8)) == approx(7.356981574804343e-02));
     }
 }

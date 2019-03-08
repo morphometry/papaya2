@@ -43,7 +43,8 @@ int main(int argc, const char **argv)
             std::cerr << " (periodic mode)\n";
             std::cerr << "\tppanalysis in <input filename> out <output "
                          "filename> boxL <box side length>\n";
-            std::cerr << "for help, please see https://morphometry.org/software/papaya2/\n";
+            std::cerr << "for help, please see "
+                         "https://morphometry.org/software/papaya2/\n";
             return 0;
         } else {
             std::cerr << "illegal argument: " << *argv << "\n";
