@@ -27,8 +27,6 @@ namespace papaya2 {
 // units.
 template <typename TYPE> struct BasicPhoto
 {
-    using data_t = TYPE;
-
     void set_coordinates(double x0, double y0, double x1, double y1,
                          int width_ /* number of pixels */,
                          int height_ /* dito */)
