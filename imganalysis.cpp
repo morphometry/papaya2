@@ -32,6 +32,9 @@ int main(int argc, const char **argv)
             num_thresh = read_arg<unsigned long>(argv++);
         } else if (string(*argv) == "contours") {
             contours_filename = read_arg<string>(argv++);
+        } else if (string(*argv) == "help" || string(*argv) == "-h") {
+            std::cerr << "for help, please see https://morphometry.org/software/papaya2/\n";
+            return 0;
         } else {
             std::cerr << "illegal argument: " << *argv << "\n";
             return 1;
