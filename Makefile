@@ -7,6 +7,8 @@ FITS_LDFLAGS = -lCCfits -lcfitsio
 # enable CGAL support for Voronoi diagrams (in ppanalysis and in pypaya2)
 CGAL_SUPPORT = 1
 CGAL_LDFLAGS = -lCGAL -LCGAL_Core -lgmp
+# set to "dll" for Windows
+SO_EXTENSION = so
 
 # modify defaults here if necessary
 -include features.mk
@@ -40,12 +42,12 @@ BINARIES = \
     sersic \
     imganalysis \
     ppanalysis \
-    pypaya2.so \
+    pypaya2.$(SO_EXTENSION) \
 
 default: all runtests
 	./runtests
 
-all: .ts.mk.hpp imganalysis ppanalysis pypaya2.so
+all: .ts.mk.hpp imganalysis ppanalysis pypaya2.$(SO_EXTENSION)
 
 # hack to make any code recompile if Makefile changes
 .ts.mk.hpp: $(MAKEFILES)
@@ -75,7 +77,10 @@ runtests: $(TEST_OBJECTS) runtests.o
 sersic: sersic.o
 	$(CXX) $(CXXFLAGS) -o $@ $< $(LDFLAGS)
 
-pypaya2.so: pypaya2.o
+pypaya2: pypaya2.$(SO_EXTENSION)
+	@true
+
+pypaya2.$(SO_EXTENSION): pypaya2.o
 	$(CXX) $(CXXFLAGS) -shared -o $@ $< $(LDFLAGS)
 
 # special rule, needs Python headers
