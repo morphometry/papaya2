@@ -46,8 +46,6 @@ struct MexFunction : matlab::mex::Function
 
     void operator()(ArgumentList outputs, ArgumentList inputs)
     {
-        std::cerr << "starting imt_for_pointpattern" << std::endl;
-
         VoronoiDiagram vd;
 
         matlab::data::Array const seeds = std::move(inputs[0]);
@@ -58,16 +56,12 @@ struct MexFunction : matlab::mex::Function
         for (int i = 0; i < dimensions[0]; ++i)
             vd.add_seed({seeds[i][0], seeds[i][1]});
 
-        std::cerr << "seeds read in" << std::endl;
-
         if (inputs.size() > 1) {
             matlab::data::Array const box = std::move(inputs[1]);
             vd.boxLx = box[0];
             vd.boxLy = box[1];
             vd.periodic = true;
         }
-
-        std::cerr << "additional input handled " << std::endl;
 
         matlab::data::ArrayFactory f;
         matlab::data::TypedArray<double> outarray =
@@ -76,7 +70,7 @@ struct MexFunction : matlab::mex::Function
         if (vd.periodic) {
             point_t offender;
             if (!vd.seeds_in_box(&offender)) {
-                std::cerr << "There are points outside of the box: "
+                std::cerr << "Warning: There are points outside of the box: "
                           << offender.x() << ", " << offender.y() << "\n";
             }
         }
@@ -88,8 +82,7 @@ struct MexFunction : matlab::mex::Function
             point_t const seed = fit->dual()->point();
 
             if (seed != vd.seeds.at(label)) {
-                std::cerr << "CGAL decided to reorder our seed points.\n";
-                break;
+                throw std::runtime_error("CGAL decided to reorder our seed points.");
             }
 
             if (!fit->is_unbounded()) {
