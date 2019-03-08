@@ -18,8 +18,9 @@ TEST_CASE("width and height can be extracted")
             {
                 CHECK(p.width() == 20);
                 CHECK(p.height() == 40);
-                CHECK(p.pixel_width() == 1. / 20);
-                CHECK(p.pixel_height() == 3. / 40);
+                vec_t const pix_diag = pixel_diagonal(p);
+                CHECK(pix_diag[0] == 1. / 20);
+                CHECK(pix_diag[1] == 3. / 40);
             }
         }
     }
@@ -120,8 +121,8 @@ TEST_CASE("marching squares algorithm")
             TestPhoto ph(config[i]);
             CHECK(ph.width() == 2);
             CHECK(ph.height() == 2);
-            auto i_imt = imt_interpolated_marching_squares(ph, .5, false);
-            auto r_imt = imt_regular_marching_squares(ph, .5, false);
+            auto i_imt = imt_interpolated_marching_squares(ph, .5);
+            auto r_imt = imt_regular_marching_squares(ph, .5);
             CHECK(i_imt.area() == ref_volume[i] * TP_PIXEL_AREA);
             CHECK(r_imt.area() == ref_volume[i] * TP_PIXEL_AREA);
             CHECK_NOTHROW(check_msq_positively_oriented(ph));
@@ -141,8 +142,8 @@ TEST_CASE("simple marching squares IMT examples")
         auto const ref_psi2 = (0.) * TP_PIXEL_SIDE;
         auto const ref_psi3 = (0.) * TP_PIXEL_SIDE;
         auto const ref_psi4 = (-2 * SQRT2) * TP_PIXEL_SIDE;
-        auto i_imt = imt_interpolated_marching_squares(one_pixel, .5, false);
-        auto r_imt = imt_regular_marching_squares(one_pixel, .5, false);
+        auto i_imt = imt_interpolated_marching_squares(one_pixel, .5);
+        auto r_imt = imt_regular_marching_squares(one_pixel, .5);
         CHECK(i_imt.area() == approx(ref_area));
         CHECK(i_imt.msm(2) == approx(0.));
         CHECK(i_imt.msm(3) == approx(0.));
@@ -176,8 +177,8 @@ TEST_CASE("simple marching squares IMT examples")
                            " xx _"
                            " x  _"
                            "    _";
-            auto i_imt = imt_interpolated_marching_squares(ph, .5, false);
-            auto r_imt = imt_regular_marching_squares(ph, .5, false);
+            auto i_imt = imt_interpolated_marching_squares(ph, .5);
+            auto r_imt = imt_regular_marching_squares(ph, .5);
             CHECK(i_imt.area() == approx(ref_area));
             CHECK(i_imt.perimeter() == approx(ref_peri));
             CHECK(i_imt.imt(0) == approx(ref_peri));
@@ -204,8 +205,8 @@ TEST_CASE("simple marching squares IMT examples")
                                "  x  _"
                                " xxx _"
                                "     _";
-                auto i_imt = imt_interpolated_marching_squares(ph, .5, false);
-                auto r_imt = imt_regular_marching_squares(ph, .5, false);
+                auto const i_imt = imt_interpolated_marching_squares(ph, .5);
+                auto const r_imt = imt_regular_marching_squares(ph, .5);
                 CHECK(i_imt.area() == approx(ref_area));
                 CHECK(i_imt.perimeter() == approx(ref_peri));
                 CHECK(i_imt.imt(2) == approx(ref_psi2));
@@ -219,11 +220,12 @@ TEST_CASE("simple marching squares IMT examples")
             }
             SECTION("orientation #2, test padding")
             {
-                TestPhoto ph = "    _"
+                TestPhoto te = "    _"
                                " x  _"
                                "xxx _";
-                auto i_imt = imt_interpolated_marching_squares(ph, .5, true);
-                auto r_imt = imt_regular_marching_squares(ph, .5, true);
+                auto const ph = make_padded_view(te, 0.);
+                auto const i_imt = imt_interpolated_marching_squares(ph, .5);
+                auto const r_imt = imt_regular_marching_squares(ph, .5);
                 CHECK(i_imt.area() == approx(ref_area));
                 CHECK(i_imt.perimeter() == approx(ref_peri));
                 CHECK(i_imt.imt(2) == approx(ref_psi2));
@@ -237,11 +239,12 @@ TEST_CASE("simple marching squares IMT examples")
             }
             SECTION("orientation #2, test other padding")
             {
-                TestPhoto ph = "    _"
+                TestPhoto te = "    _"
                                "  x _"
                                " xxx_";
-                auto i_imt = imt_interpolated_marching_squares(ph, .5, true);
-                auto r_imt = imt_regular_marching_squares(ph, .5, true);
+                auto const ph = make_padded_view(te, 0.);
+                auto const i_imt = imt_interpolated_marching_squares(ph, .5);
+                auto const r_imt = imt_regular_marching_squares(ph, .5);
                 CHECK(i_imt.area() == approx(ref_area));
                 CHECK(i_imt.perimeter() == approx(ref_peri));
                 CHECK(i_imt.imt(2) == approx(ref_psi2));
@@ -261,7 +264,7 @@ TEST_CASE("simple marching squares IMT examples")
                               " x _"
                               "   _";
         auto const i_imt =
-            imt_interpolated_marching_squares(one_pixel, 1., false);
+            imt_interpolated_marching_squares(one_pixel, 1.);
         CHECK(i_imt.area() == 0.);
         CHECK(i_imt.imt(0) == 0.);
         CHECK(i_imt.imt(2) == 0.);
@@ -271,18 +274,17 @@ TEST_CASE("simple marching squares IMT examples")
     SECTION("Minkowski maps")
     {
         TestPhoto one_pixel = "x_";
+        auto const padded = make_padded_view(one_pixel, 0.);
 
         complex_image_t out;
-        minkowski_map_interpolated_marching_squares(&out, one_pixel, .5, 2,
-                                                    true);
+        minkowski_map_interpolated_marching_squares(&out, padded, .5, 2);
         CHECK(out.width() == 2);
         CHECK(out.height() == 2);
         CHECK(out(0, 0) != 0.);
         CHECK(out(0, 1) != 0.);
         CHECK(out(1, 1) != 0.);
         CHECK(out(1, 0) != 0.);
-        minkowski_map_interpolated_marching_squares(&out, one_pixel, .5, 2,
-                                                    false);
+        minkowski_map_interpolated_marching_squares(&out, one_pixel, .5, 2);
         CHECK(out.width() == 0);
         CHECK(out.height() == 0);
     }

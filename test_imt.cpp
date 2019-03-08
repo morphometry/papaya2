@@ -86,7 +86,7 @@ TEST_CASE("MinkowskiAccumulator struct")
             }
         } ph;
 
-        auto imt = imt_interpolated_marching_squares(ph, .5, false);
+        auto imt = imt_interpolated_marching_squares(ph, .5);
         // FIXME accuracy problem?
         CHECK(imt.area() == approx(ref_area).tolerance(1e-6));
         CHECK(imt.perimeter() == approx(ref_peri));

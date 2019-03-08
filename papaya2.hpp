@@ -18,13 +18,20 @@ namespace papaya2 {
 // need not necessarily derive from Photo.
 //
 // required functions for a PHOTO are:
+//
 // operator() for pixel access.
+//
 // width() and height() return the width and height, in pixels.
-// operator()(-1,y) etc. return a black (intensity 0) padding pixel.
-// smaller indices may fail, throw or cause undefined behavior.
-// the boundary pixels are not intended to be written to.
-// pixel_width and pixel_height are used to convert to physical
-// units.
+// please return int, not unsigned int.
+//
+// The image is considered to consist of the pixels with indices i,j
+// where 0 <= i < width() and 0 <= height().
+//
+// You can use make_padded_view to supply padding pixels around an
+// image which doesn't have any, s.t. any contours are closed.
+//
+// the functions origin() and upper_right() are used to convert to
+// physical units.
 template <typename TYPE> struct BasicPhoto
 {
     void set_coordinates(double x0, double y0, double x1, double y1,
@@ -85,12 +92,16 @@ template <typename TYPE> struct BasicPhoto
 
     int width() const { return numx; }
     int height() const { return numy; }
-    double pixel_width() const { return lenx; }
-    double pixel_height() const { return leny; }
     vec_t origin() const { return {origin_x, origin_y}; }
     vec_t upper_right() const
     {
         return {origin_x + numx * lenx, origin_y + numy * leny};
+    }
+
+    friend
+    vec_t pixel_diagonal(BasicPhoto<TYPE> const &photo)
+    {
+        return { photo.lenx, photo.leny };
     }
 
   protected:
@@ -102,6 +113,8 @@ template <typename TYPE> struct BasicPhoto
 
     size_t pixel_index(int i, int j) const
     {
+        if (i < 0 || i >= numx || j < 0 || j >= numy)
+            throw std::range_error("invalid pixel index in BasicPhoto");
         return size_t(j + 1) * size_t(numx + 1) + size_t(i) + 1u;
     }
 
@@ -109,6 +122,14 @@ template <typename TYPE> struct BasicPhoto
 
     const TYPE &at(int i, int j) const { return data[pixel_index(i, j)]; }
 };
+
+// compute pixel diagonal from coordinate system
+template <typename PHOTO>
+vec_t pixel_diagonal(PHOTO const &photo)
+{
+    vec_t const diagonal = photo.upper_right() - photo.origin();
+    return { diagonal[0] / photo.width(), diagonal[1] / photo.height() };
+}
 
 using Photo = BasicPhoto<double>;
 
@@ -121,9 +142,8 @@ template <typename PHOTO> struct PhotoAdapter
 
     int width() const { return original.width(); }
     int height() const { return original.height(); }
-    double pixel_width() const { return original.pixel_width(); }
-    double pixel_height() const { return original.pixel_height(); }
     vec_t origin() const { return original.origin(); }
+    vec_t upper_right() const { return original.upper_right(); }
 };
 
 // adapter to threshold a photo.
@@ -150,6 +170,47 @@ auto make_thresholded_view(const PHOTO &p, const THRESHOLD &t)
     -> ThresholdingAdapter<PHOTO, THRESHOLD>
 {
     return ThresholdingAdapter<PHOTO, THRESHOLD>(p, t);
+}
+
+// adapter to pad a photo.
+// returns photo(i,j) if (i,j) is in the original image,
+// and padding_value otherwise.  data in the photo is cast to double.
+// do not use directly, use make_padded_view.
+template <typename PHOTO> struct PaddingAdapter : PhotoAdapter<PHOTO>
+{
+    using PhotoAdapter<PHOTO>::original;
+    double const padding_value;
+
+    PaddingAdapter(const PHOTO &ph, double pv)
+        : PhotoAdapter<PHOTO>(ph), padding_value(pv)
+    {}
+
+    double operator()(int i, int j) const
+    {
+        if (i == 0 || j == 0)
+            return padding_value;
+        if (i == original.width() + 1 || j == original.height() + 1)
+            return padding_value;
+        return double(original(i - 1, j - 1));
+    }
+
+    int width() const { return original.width() + 2; }
+    int height() const { return original.height() + 2; }
+    vec_t origin() const { return original.origin() - pixel_diagonal(original); }
+    vec_t upper_right() const { return original.upper_right() + pixel_diagonal(original); }
+};
+
+template <typename PHOTO>
+vec_t pixel_diagonal(const PaddingAdapter<PHOTO> &photo)
+{
+    // padded photo has same-size pixels
+    return pixel_diagonal(photo.original);
+}
+
+template <typename PHOTO>
+auto make_padded_view(const PHOTO &p, double pv) -> PaddingAdapter<PHOTO>
+{
+    return PaddingAdapter<PHOTO>(p, pv);
 }
 
 template <typename TYPE, typename PHOTO>
@@ -467,24 +528,21 @@ void add_interpolated_four_neighborhood(SINK *sink, vec_t const &off,
 // interpolated marching squares, loop over the whole image
 // effectively calls add_area and add_perimeter on "sink" once
 // a piece of the contour has been identified.
-// processes the whole photo, (w-2)x(h-2) neighborhoods, or
-// w x h if padded is set to true.  padding pixels are taken to
-// be black, intensity zero.
+// processes the whole photo, (w-2)x(h-2) neighborhoods,
 template <typename SINK, typename PHOTO, typename THRESHOLD>
 void trace_isocontour_interpolated_marching_squares(SINK *sink, const PHOTO &ph,
-                                                    const THRESHOLD &threshold,
-                                                    bool padded = false)
+                                                    const THRESHOLD &threshold)
 {
-    const int start = -padded;
-    const int width = ph.width() + padded;
-    const int height = ph.height() + padded;
+    const int width = ph.width();
+    const int height = ph.height();
 
-    const vec_t pixdiag = {ph.pixel_width(), ph.pixel_height()};
+    vec_t const pix_diag = pixel_diagonal(ph);
+    vec_t const origin = ph.origin();
 
-    for (int j = start; j < height - 1; ++j)
-        for (int i = start; i < width - 1; ++i) {
-            vec_t off = {i * ph.pixel_width(), j * ph.pixel_height()};
-            add_interpolated_four_neighborhood(sink, off, pixdiag, ph(i, j),
+    for (int j = 0; j < height - 1; ++j)
+        for (int i = 0; i < width - 1; ++i) {
+            vec_t off = origin + vec_t{i * pix_diag[0], j * pix_diag[1]};
+            add_interpolated_four_neighborhood(sink, off, pix_diag, ph(i, j),
                                                ph(i, j + 1), ph(i + 1, j),
                                                ph(i + 1, j + 1), threshold);
         }
@@ -493,11 +551,10 @@ void trace_isocontour_interpolated_marching_squares(SINK *sink, const PHOTO &ph,
 // convenience wrapper to compute IMT's with interpolated marching squares
 template <typename PHOTO>
 MinkowskiAccumulator imt_interpolated_marching_squares(const PHOTO &ph,
-                                                       double threshold,
-                                                       bool padded = false)
+                                                       double threshold)
 {
     MinkowskiAccumulator acc;
-    trace_isocontour_interpolated_marching_squares(&acc, ph, threshold, padded);
+    trace_isocontour_interpolated_marching_squares(&acc, ph, threshold);
     return acc;
 }
 
@@ -505,21 +562,19 @@ MinkowskiAccumulator imt_interpolated_marching_squares(const PHOTO &ph,
 // by applying interpolated marching squares on a binarized image
 template <typename SINK, typename PHOTO, typename THRESHOLD>
 void trace_isocontour_regular_marching_squares(SINK *sink, const PHOTO &ph,
-                                               const THRESHOLD &threshold,
-                                               bool padded = false)
+                                               const THRESHOLD &threshold)
 {
     auto thr_ph = make_thresholded_view(ph, threshold);
-    trace_isocontour_interpolated_marching_squares(sink, thr_ph, .5, padded);
+    trace_isocontour_interpolated_marching_squares(sink, thr_ph, .5);
 }
 
 // convenience wrapper to compute IMT's with regular marching squares
 template <typename PHOTO>
 MinkowskiAccumulator imt_regular_marching_squares(const PHOTO &ph,
-                                                  double threshold,
-                                                  bool padded = false)
+                                                  double threshold)
 {
     MinkowskiAccumulator acc;
-    trace_isocontour_regular_marching_squares(&acc, ph, threshold, padded);
+    trace_isocontour_regular_marching_squares(&acc, ph, threshold);
     return acc;
 }
 
@@ -539,32 +594,28 @@ template <typename PHOTO, typename THRESHOLD>
 void minkowski_map_interpolated_marching_squares(complex_image_t *out,
                                                  const PHOTO &ph,
                                                  const THRESHOLD &threshold,
-                                                 int s, bool padded = false)
+                                                 int s)
 {
-    const int start = -padded;
-    const int lastx = ph.width() - 2 + padded;
-    const int lasty = ph.height() - 2 + padded;
+    const int lastx = ph.width() - 2;
+    const int lasty = ph.height() - 2;
 
-    const vec_t pixdiag = {ph.pixel_width(), ph.pixel_height()};
-    const vec_t half_a_pixdiag = pixdiag / 2;
+    vec_t const origin = ph.origin();
+    vec_t const pix_diag = pixel_diagonal(ph);
+    vec_t const half_a_pixdiag = pix_diag / 2;
     vec_t mmap_origin = ph.origin() + half_a_pixdiag;
-    if (padded)
-        mmap_origin -= pixdiag;
     vec_t mmap_upperright = ph.upper_right() - half_a_pixdiag;
-    if (padded)
-        mmap_upperright += pixdiag;
     out->set_coordinates(mmap_origin[0], mmap_origin[1], mmap_upperright[0],
-                         mmap_upperright[1], lastx - start + 1,
-                         lasty - start + 1);
+                         mmap_upperright[1], lastx + 1,
+                         lasty + 1);
 
-    for (int j = start; j <= lasty; ++j) {
-        for (int i = start; i <= lastx; ++i) {
-            vec_t off = {i * ph.pixel_width(), j * ph.pixel_height()};
+    for (int j = 0; j <= lasty; ++j) {
+        for (int i = 0; i <= lastx; ++i) {
+            vec_t const off = origin + vec_t{i * pix_diag[0], j * pix_diag[1]};
             MinkowskiAccumulator minkval;
-            add_interpolated_four_neighborhood(&minkval, off, pixdiag, ph(i, j),
+            add_interpolated_four_neighborhood(&minkval, off, pix_diag, ph(i, j),
                                                ph(i, j + 1), ph(i + 1, j),
                                                ph(i + 1, j + 1), threshold);
-            (*out)(i + padded, j + padded) = minkval.imt(s);
+            (*out)(i, j) = minkval.imt(s);
         }
     }
 }

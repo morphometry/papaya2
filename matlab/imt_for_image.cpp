@@ -45,17 +45,15 @@ struct MexPhoto
 
     double operator()(int i, int j) const
     {
-        if (i == -1 || j == -1)
-            return 0;
-        if (i == width() || j == height())
-            return 0;
+        if (i < 0 || i >= width_ || j < 0 || j >= height_)
+            throw std::range_error("invalid pixel index in MexPhoto");
         return data_[height_ - 1 - j][i];
     }
 
     int width() const { return width_; }
     int height() const { return height_; }
-    double pixel_width() const { return 1.; }
-    double pixel_height() const { return 1.; }
+    vec_t origin() const { return { 0., 0. }; }
+    vec_t upper_right() const { return { double(width_), double(height_) }; }
 };
 
 // the interface function to MATLAB

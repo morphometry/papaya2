@@ -30,7 +30,7 @@ struct CheckPositivelyOriented
 template <typename PHOTO> void check_msq_positively_oriented(const PHOTO &ph)
 {
     CheckPositivelyOriented chk;
-    trace_isocontour_interpolated_marching_squares(&chk, ph, .5, false);
+    trace_isocontour_interpolated_marching_squares(&chk, ph, .5);
 }
 
 struct CApprox
