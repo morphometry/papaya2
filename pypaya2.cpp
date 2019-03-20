@@ -15,23 +15,27 @@ using namespace papaya2;
 using namespace papaya2::python;
 
 #ifdef HAVE_CGAL
-static void np_set_double(PyArrayObject *arr, int i, double value)
+static void np_set_double(UniquePyPtr &obj, int i, double value)
 {
+    auto arr = obj.reinterpret<PyArrayObject>();
     *reinterpret_cast<double *>(PyArray_GETPTR1(arr, i)) = value;
 }
 
-static void np_set_complex(PyArrayObject *arr, int i, complex_t value)
+static void np_set_complex(UniquePyPtr &obj, int i, complex_t value)
 {
+    auto arr = obj.reinterpret<PyArrayObject>();
     *reinterpret_cast<complex_t *>(PyArray_GETPTR1(arr, i)) = value;
 }
 
-static double np_get_double(PyArrayObject *arr, int i)
+static double np_get_double(UniquePyPtr &obj, int i)
 {
+    auto arr = obj.reinterpret<PyArrayObject>();
     return *reinterpret_cast<double const *>(PyArray_GETPTR1(arr, i));
 }
 
-static double np_get_double(PyArrayObject *arr, int i, int j)
+static double np_get_double(UniquePyPtr &obj, int i, int j)
 {
+    auto arr = obj.reinterpret<PyArrayObject>();
     return *reinterpret_cast<double const *>(PyArray_GETPTR2(arr, i, j));
 }
 
@@ -95,11 +99,11 @@ extern "C"
                 if (PyArray_NDIM(arr_box) == 1) {
                     npy_intp *dimensions = PyArray_DIMS(arr_box);
                     if (dimensions[0] == 2) {
-                        vd.boxLx = np_get_double(arr_box, 0);
-                        vd.boxLy = np_get_double(arr_box, 1);
+                        vd.boxLx = np_get_double(ref_box, 0);
+                        vd.boxLy = np_get_double(ref_box, 1);
                         vd.periodic = true;
                     } else if (dimensions[0] == 1) {
-                        vd.boxLx = vd.boxLy = np_get_double(arr_box, 0);
+                        vd.boxLx = vd.boxLy = np_get_double(ref_box, 0);
                         vd.periodic = true;
                     } else {
                         (void)PyErr_Format(
@@ -109,7 +113,7 @@ extern "C"
                         return nullptr;
                     }
                 } else if (PyArray_NDIM(arr_box) == 0) {
-                    vd.boxLx = vd.boxLy = np_get_double(arr_box, 0);
+                    vd.boxLx = vd.boxLy = np_get_double(ref_box, 0);
                     vd.periodic = true;
                 } else {
                     (void)PyErr_Format(
@@ -153,8 +157,8 @@ extern "C"
 
         // fill seed point coordinates into the Voronoi diagram
         for (int i = 0; i != N; ++i)
-            vd.add_seed({np_get_double(arr_seeds, i, 0),
-                         np_get_double(arr_seeds, i, 1)});
+            vd.add_seed({np_get_double(ref_seeds, i, 0),
+                         np_get_double(ref_seeds, i, 1)});
 
         // compute the Voronoi diagram
         vd.make_voronoi();
@@ -174,19 +178,11 @@ extern "C"
                 // compute Minkowski valuations and copy them over
                 if (!fit->is_unbounded()) {
                     auto const minkval = vd.minkval_for_cell(fit);
-                    np_set_double(
-                        ref_area_data.reinterpret<PyArrayObject>(),
-                        label, minkval.area());
-                    np_set_double(
-                        ref_peri_data.reinterpret<PyArrayObject>(),
-                        label, minkval.perimeter());
+                    np_set_double(ref_area_data, label, minkval.area());
+                    np_set_double(ref_peri_data, label, minkval.perimeter());
                     for (int s = 2; s <= MAX_S; ++s) {
-                        np_set_double(
-                            ref_msm_data[s].reinterpret<PyArrayObject>(),
-                            label, minkval.msm(s));
-                        np_set_complex(
-                            ref_imt_data[s].reinterpret<PyArrayObject>(),
-                            label, minkval.imt(s));
+                        np_set_double(ref_msm_data[s], label, minkval.msm(s));
+                        np_set_complex(ref_imt_data[s], label, minkval.imt(s));
                     }
                 }
 
@@ -198,8 +194,9 @@ extern "C"
 
         // allocate the return dict and populate it
         auto ref_return_dict = UniquePyPtr(PyDict_New());
-        auto move_item_to_dict = [&] (string const &name, UniquePyPtr &ref) {
-            (void)PyDict_SetItemString(ref_return_dict.get(), name.c_str(), ref.release());
+        auto move_item_to_dict = [&](string const &name, UniquePyPtr &ref) {
+            (void)PyDict_SetItemString(ref_return_dict.get(), name.c_str(),
+                                       ref.release());
         };
         move_item_to_dict("area", ref_area_data);
         move_item_to_dict("perimeter", ref_peri_data);
