@@ -50,22 +50,9 @@ static UniquePyPtr np_make_new_vector(int N, int datatype)
     return ret;
 }
 
-enum
-{
-    METR_PERI,
-    METR_Q2,
-    METR_Q3,
-    METR_Q4,
-    METR_Q5,
-    METR_Q6,
-    METR_Q7,
-    METR_Q8,
-    METR_PSI2,
-    METR_PSI6,
-    NUM_METR
-};
-
 #endif // HAVE_CGAL
+
+static int const MAX_S = MinkowskiAccumulator::MAX_S;
 
 extern "C"
 {
@@ -155,12 +142,14 @@ extern "C"
         }
 
         // get output arrays
-        auto ref_return_data = std::vector<UniquePyPtr>(NUM_METR);
-        for (auto m : {METR_PERI, METR_Q2, METR_Q3, METR_Q4, METR_Q5, METR_Q6,
-                       METR_Q7, METR_Q8})
-            ref_return_data[m] = np_make_new_vector(N, NPY_DOUBLE);
-        for (auto m : {METR_PSI2, METR_PSI6})
-            ref_return_data[m] = np_make_new_vector(N, NPY_CDOUBLE);
+        auto ref_area_data = np_make_new_vector(N, NPY_DOUBLE);
+        auto ref_peri_data = np_make_new_vector(N, NPY_DOUBLE);
+        auto ref_msm_data = std::vector<UniquePyPtr>(MAX_S + 1);
+        auto ref_imt_data = std::vector<UniquePyPtr>(MAX_S + 1);
+        for (int s = 2; s <= MAX_S; ++s) {
+            ref_msm_data[s] = np_make_new_vector(N, NPY_DOUBLE);
+            ref_imt_data[s] = np_make_new_vector(N, NPY_CDOUBLE);
+        }
 
         // fill seed point coordinates into the Voronoi diagram
         for (int i = 0; i != N; ++i)
@@ -186,35 +175,19 @@ extern "C"
                 if (!fit->is_unbounded()) {
                     auto const minkval = vd.minkval_for_cell(fit);
                     np_set_double(
-                        ref_return_data[METR_PERI].reinterpret<PyArrayObject>(),
+                        ref_area_data.reinterpret<PyArrayObject>(),
+                        label, minkval.area());
+                    np_set_double(
+                        ref_peri_data.reinterpret<PyArrayObject>(),
                         label, minkval.perimeter());
-                    np_set_double(
-                        ref_return_data[METR_Q2].reinterpret<PyArrayObject>(),
-                        label, minkval.msm(2));
-                    np_set_double(
-                        ref_return_data[METR_Q3].reinterpret<PyArrayObject>(),
-                        label, minkval.msm(3));
-                    np_set_double(
-                        ref_return_data[METR_Q4].reinterpret<PyArrayObject>(),
-                        label, minkval.msm(4));
-                    np_set_double(
-                        ref_return_data[METR_Q5].reinterpret<PyArrayObject>(),
-                        label, minkval.msm(5));
-                    np_set_double(
-                        ref_return_data[METR_Q6].reinterpret<PyArrayObject>(),
-                        label, minkval.msm(6));
-                    np_set_double(
-                        ref_return_data[METR_Q7].reinterpret<PyArrayObject>(),
-                        label, minkval.msm(7));
-                    np_set_double(
-                        ref_return_data[METR_Q8].reinterpret<PyArrayObject>(),
-                        label, minkval.msm(8));
-                    np_set_complex(
-                        ref_return_data[METR_PSI2].reinterpret<PyArrayObject>(),
-                        label, minkval.imt(2));
-                    np_set_complex(
-                        ref_return_data[METR_PSI6].reinterpret<PyArrayObject>(),
-                        label, minkval.imt(6));
+                    for (int s = 2; s <= MAX_S; ++s) {
+                        np_set_double(
+                            ref_msm_data[s].reinterpret<PyArrayObject>(),
+                            label, minkval.msm(s));
+                        np_set_complex(
+                            ref_imt_data[s].reinterpret<PyArrayObject>(),
+                            label, minkval.imt(s));
+                    }
                 }
 
                 ++label;
@@ -225,11 +198,15 @@ extern "C"
 
         // allocate the return dict and populate it
         auto ref_return_dict = UniquePyPtr(PyDict_New());
-        std::array<char const *, NUM_METR> const metr_name = {
-            "P", "q2", "q3", "q4", "q5", "q6", "q7", "q8", "psi2", "psi6"};
-        for (int j = 0; j != NUM_METR; ++j)
-            PyDict_SetItemString(ref_return_dict.get(), metr_name[j],
-                                 ref_return_data[j].release());
+        auto move_item_to_dict = [&] (string const &name, UniquePyPtr &ref) {
+            (void)PyDict_SetItemString(ref_return_dict.get(), name.c_str(), ref.release());
+        };
+        move_item_to_dict("area", ref_area_data);
+        move_item_to_dict("perimeter", ref_peri_data);
+        for (int s = 2; s <= MAX_S; ++s) {
+            move_item_to_dict("q" + std::to_string(s), ref_msm_data[s]);
+            move_item_to_dict("psi" + std::to_string(s), ref_imt_data[s]);
+        }
 
         return ref_return_dict.release();
     }

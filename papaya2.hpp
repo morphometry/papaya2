@@ -183,7 +183,7 @@ struct MinkowskiAccumulator
     // cost seems to be in the geometry processing, and a few extra cexp's
     // don't cost as much.  we leave it to the user to ignore any data she
     // does not need.
-    static const int MAX_S = 8;
+    static const int MAX_S = 12;
 
     MinkowskiAccumulator()
     {
