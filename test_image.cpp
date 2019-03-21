@@ -125,10 +125,68 @@ TEST_CASE("marching squares algorithm")
             auto r_imt = imt_regular_marching_squares(ph, .5);
             CHECK(i_imt.area() == ref_volume[i] * TP_PIXEL_AREA);
             CHECK(r_imt.area() == ref_volume[i] * TP_PIXEL_AREA);
-            CHECK_NOTHROW(check_msq_positively_oriented(ph));
+            CHECK_NOTHROW(check_msq_positively_oriented(ph, CONNECT_WHITE));
+            CHECK_NOTHROW(check_msq_positively_oriented(ph, CONNECT_BLACK));
+            auto b_imt = imt_interpolated_marching_squares(ph, .5, ANALYZE_BLACK);
+            CHECK(TP_PIXEL_AREA - b_imt.area() == TP_PIXEL_AREA * ref_volume[i]);
+            CHECK(b_imt.imt(0) == +r_imt.imt(0));
+            CHECK(b_imt.imt(3) == -r_imt.imt(3));
+            b_imt = imt_regular_marching_squares(ph, .5, ANALYZE_BLACK);
+            CHECK(TP_PIXEL_AREA - b_imt.area() == TP_PIXEL_AREA * ref_volume[i]);
+            CHECK(b_imt.imt(0) == +r_imt.imt(0));
+            CHECK(b_imt.imt(3) == -r_imt.imt(3));
+        }
+    }
+
+    SECTION("negating should flip the normals") {
+        Photo ph;
+        ph.set_coordinates(0, 0, 2, 2, 2, 2);
+        ph(0,1) = -1.3; ph(1,1) = 0.7;
+        ph(0,0) = -2.1; ph(1,0) = 1.7;
+        SECTION("config #12") {
+            auto i_imt = imt_interpolated_marching_squares(ph, 0.);
+            auto b_imt = imt_interpolated_marching_squares(ph, 0., ANALYZE_BLACK);
+            CHECK(i_imt.imt(3) == -b_imt.imt(3));
+            CHECK(i_imt.imt(0) == b_imt.imt(0));
+        }
+        SECTION("config #12, connect black") {
+            auto i_imt = imt_interpolated_marching_squares(ph, 0., CONNECT_BLACK);
+            auto b_imt = imt_interpolated_marching_squares(ph, 0., ANALYZE_BLACK | CONNECT_BLACK);
+            CHECK(i_imt.imt(3) == -b_imt.imt(3));
+            CHECK(i_imt.imt(0) == b_imt.imt(0));
+        }
+        ph(0,1) = 0.7; ph(1,1) = -1.3;
+        ph(0,0) = -2.1; ph(1,0) = 1.7;
+        SECTION("critical config #6") {
+            auto i_imt = imt_interpolated_marching_squares(ph, 0.);
+            auto b_imt = imt_interpolated_marching_squares(ph, 0., ANALYZE_BLACK);
+            CHECK(i_imt.imt(3) == -b_imt.imt(3));
+            CHECK(i_imt.imt(0) == b_imt.imt(0));
+        }
+        SECTION("critical config #6, connect white") {
+            auto i_imt = imt_interpolated_marching_squares(ph, 0., CONNECT_BLACK);
+            auto b_imt = imt_interpolated_marching_squares(ph, 0., ANALYZE_BLACK | CONNECT_BLACK);
+            CHECK(i_imt.imt(3) == -b_imt.imt(3));
+            CHECK(i_imt.imt(0) == b_imt.imt(0));
+        }
+        ph(0,1) = -0.7; ph(1,1) = 1.3;
+        ph(0,0) = 2.1; ph(1,0) = -1.7;
+        SECTION("critical config #9") {
+            auto i_imt = imt_interpolated_marching_squares(ph, 0.);
+            auto b_imt = imt_interpolated_marching_squares(ph, 0., ANALYZE_BLACK);
+            CHECK(i_imt.imt(3) == -b_imt.imt(3));
+            CHECK(i_imt.imt(0) == b_imt.imt(0));
+        }
+        SECTION("critical config #9, connect white") {
+            auto i_imt = imt_interpolated_marching_squares(ph, 0., CONNECT_BLACK);
+            auto b_imt = imt_interpolated_marching_squares(ph, 0., ANALYZE_BLACK | CONNECT_BLACK);
+            CHECK(i_imt.imt(3) == -b_imt.imt(3));
+            CHECK(i_imt.imt(0) == b_imt.imt(0));
         }
     }
 }
+
+static complex_t const I(0, 1);
 
 TEST_CASE("simple marching squares IMT examples")
 {
@@ -142,8 +200,8 @@ TEST_CASE("simple marching squares IMT examples")
         auto const ref_psi2 = (0.) * TP_PIXEL_SIDE;
         auto const ref_psi3 = (0.) * TP_PIXEL_SIDE;
         auto const ref_psi4 = (-2 * SQRT2) * TP_PIXEL_SIDE;
-        auto i_imt = imt_interpolated_marching_squares(one_pixel, .5);
-        auto r_imt = imt_regular_marching_squares(one_pixel, .5);
+        auto const i_imt = imt_interpolated_marching_squares(one_pixel, .5);
+        auto const r_imt = imt_regular_marching_squares(one_pixel, .5);
         CHECK(i_imt.area() == approx(ref_area));
         CHECK(i_imt.msm(2) == approx(0.));
         CHECK(i_imt.msm(3) == approx(0.));
@@ -191,6 +249,17 @@ TEST_CASE("simple marching squares IMT examples")
             CHECK(r_imt.imt(2) == approx(ref_psi2));
             CHECK(r_imt.imt(3) == approx(ref_psi3));
             CHECK(r_imt.imt(4) == approx(ref_psi4));
+            i_imt = imt_interpolated_marching_squares(ph, .5, ANALYZE_BLACK);
+            r_imt = imt_regular_marching_squares(ph, .5, ANALYZE_BLACK);
+            CHECK(i_imt.area() == approx(12 * TP_PIXEL_AREA - ref_area));
+            CHECK(i_imt.perimeter() == approx(ref_peri));
+            CHECK(i_imt.imt(0) == approx(ref_peri));
+            CHECK(i_imt.imt(2) == approx(ref_psi2));
+            CHECK(i_imt.imt(3) == approx(ref_psi3 * std::exp(I * M_PI)));
+            CHECK(i_imt.imt(4) == approx(ref_psi4));
+            CHECK(r_imt.imt(2) == approx(ref_psi2));
+            CHECK(r_imt.imt(3) == approx(ref_psi3 * std::exp(I * M_PI)));
+            CHECK(r_imt.imt(4) == approx(ref_psi4));
         }
 
         SECTION("orientation #2")
@@ -205,8 +274,8 @@ TEST_CASE("simple marching squares IMT examples")
                                "  x  _"
                                " xxx _"
                                "     _";
-                auto const i_imt = imt_interpolated_marching_squares(ph, .5);
-                auto const r_imt = imt_regular_marching_squares(ph, .5);
+                auto i_imt = imt_interpolated_marching_squares(ph, .5);
+                auto r_imt = imt_regular_marching_squares(ph, .5);
                 CHECK(i_imt.area() == approx(ref_area));
                 CHECK(i_imt.perimeter() == approx(ref_peri));
                 CHECK(i_imt.imt(2) == approx(ref_psi2));
@@ -216,6 +285,18 @@ TEST_CASE("simple marching squares IMT examples")
                 CHECK(r_imt.perimeter() == approx(ref_peri));
                 CHECK(r_imt.imt(2) == approx(ref_psi2));
                 CHECK(r_imt.imt(3) == approx(ref_psi3));
+                CHECK(r_imt.imt(4) == approx(ref_psi4));
+                i_imt =
+                    imt_interpolated_marching_squares(ph, .5, ANALYZE_BLACK);
+                r_imt = imt_regular_marching_squares(ph, .5, ANALYZE_BLACK);
+                CHECK(i_imt.area() == approx(12 * TP_PIXEL_AREA - ref_area));
+                CHECK(i_imt.perimeter() == approx(ref_peri));
+                CHECK(i_imt.imt(0) == approx(ref_peri));
+                CHECK(i_imt.imt(2) == approx(ref_psi2));
+                CHECK(i_imt.imt(3) == approx(ref_psi3 * std::exp(I * M_PI)));
+                CHECK(i_imt.imt(4) == approx(ref_psi4));
+                CHECK(r_imt.imt(2) == approx(ref_psi2));
+                CHECK(r_imt.imt(3) == approx(ref_psi3 * std::exp(I * M_PI)));
                 CHECK(r_imt.imt(4) == approx(ref_psi4));
             }
             SECTION("orientation #2, test padding")
@@ -263,9 +344,14 @@ TEST_CASE("simple marching squares IMT examples")
         TestPhoto one_pixel = "   _"
                               " x _"
                               "   _";
-        auto const i_imt =
-            imt_interpolated_marching_squares(one_pixel, 1.);
+        auto i_imt = imt_interpolated_marching_squares(one_pixel, 1.);
         CHECK(i_imt.area() == 0.);
+        CHECK(i_imt.imt(0) == 0.);
+        CHECK(i_imt.imt(2) == 0.);
+        CHECK(i_imt.imt(3) == 0.);
+        CHECK(i_imt.imt(4) == 0.);
+        i_imt = imt_interpolated_marching_squares(one_pixel, 1., ANALYZE_BLACK);
+        CHECK(i_imt.area() == 4. * TP_PIXEL_AREA);
         CHECK(i_imt.imt(0) == 0.);
         CHECK(i_imt.imt(2) == 0.);
         CHECK(i_imt.imt(3) == 0.);

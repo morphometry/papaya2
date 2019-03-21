@@ -161,6 +161,28 @@ auto make_thresholded_view(const PHOTO &p, const THRESHOLD &t)
     return ThresholdingAdapter<PHOTO, THRESHOLD>(p, t);
 }
 
+// do not use directly, use make_negated_view.
+template <typename PHOTO> struct NegatingAdapter : PhotoAdapter<PHOTO>
+{
+    using PhotoAdapter<PHOTO>::original;
+
+    NegatingAdapter(const PHOTO &ph) : PhotoAdapter<PHOTO>(ph) {}
+
+    double operator()(int x, int y) const { return -double(original(x, y)); }
+};
+
+template <typename PHOTO>
+auto make_negated_view(const PHOTO &p) -> NegatingAdapter<PHOTO>
+{
+    return NegatingAdapter<PHOTO>(p);
+}
+
+template <typename PHOTO>
+auto make_negated_view(const NegatingAdapter<PHOTO> &p) -> PHOTO
+{
+    return p.original;
+}
+
 // adapter to pad a photo.
 // returns photo(i,j) if (i,j) is in the original image,
 // and padding_value otherwise.  data in the photo is cast to double.
@@ -391,15 +413,52 @@ void add_polygon_area(SINK *sink, const CONTAINER &vertices)
     (void)vertices;
 }
 
+struct MarchingSquaresFlags
+{
+    explicit MarchingSquaresFlags(unsigned i = 0) : i_(i) {}
+    using cref = const MarchingSquaresFlags &;
+
+    friend bool operator&(cref lhs, cref rhs)
+    {
+        return (lhs.i_ & rhs.i_) != 0u;
+    }
+
+    MarchingSquaresFlags &operator|=(cref rhs)
+    {
+        i_ |= rhs.i_;
+        return *this;
+    }
+
+    friend MarchingSquaresFlags operator|(cref lhs, cref rhs)
+    {
+        return MarchingSquaresFlags(lhs.i_ | rhs.i_);
+    }
+
+    MarchingSquaresFlags &operator^=(cref rhs)
+    {
+        i_ ^= rhs.i_;
+        return *this;
+    }
+
+  private:
+    unsigned i_;
+};
+
+static auto const ANALYZE_WHITE = MarchingSquaresFlags(0);
+static auto const ANALYZE_BLACK = MarchingSquaresFlags(1);
+static auto const CONNECT_WHITE = MarchingSquaresFlags(0);
+static auto const CONNECT_BLACK = MarchingSquaresFlags(2);
+// FIXME implement
+// static auto const DISABLE_INTERPOLATION = MarchingSquaresFlags(4);
+
 // interpolated marching squares, core routine handling a 2x2 neighborhood
 // FIXME this is missing the curvature measures
-// FIXME we might want to add extra logic to break the
-//       arbitrary choice in cases 6 and 9
 template <typename SINK>
 void add_interpolated_four_neighborhood(SINK *sink, vec_t const &off,
                                         vec_t const &pix_diag, double ll,
                                         double ul, double lr, double ur,
-                                        double threshold)
+                                        double threshold,
+                                        MarchingSquaresFlags flags)
 {
     unsigned lut_index = (ll >= threshold) * 1 + (ul >= threshold) * 2 +
                          (lr >= threshold) * 4 + (ur >= threshold) * 8;
@@ -429,6 +488,7 @@ void add_interpolated_four_neighborhood(SINK *sink, vec_t const &off,
     se = elementwise_product(se, pix_diag);
     nw = elementwise_product(nw, pix_diag);
     ne = elementwise_product(ne, pix_diag);
+    // look-up table
     switch (lut_index) {
     case 0:
         // no area
@@ -457,12 +517,19 @@ void add_interpolated_four_neighborhood(SINK *sink, vec_t const &off,
         add_contour_segment(sink, off, right, left);
         break;
     case 6:
-        add_triangle_area(sink, off, nw, left, upper);
-        add_triangle_area(sink, off, left, lower, upper);
-        add_triangle_area(sink, off, upper, lower, right);
-        add_triangle_area(sink, off, lower, se, right);
-        add_contour_segment(sink, off, left, lower);
-        add_contour_segment(sink, off, right, upper);
+        if (flags & CONNECT_BLACK) {
+            add_contour_segment(sink, off, left, upper);
+            add_triangle_area(sink, off, nw, left, upper);
+            add_contour_segment(sink, off, right, lower);
+            add_triangle_area(sink, off, lower, se, right);
+        } else {
+            add_triangle_area(sink, off, nw, left, upper);
+            add_triangle_area(sink, off, left, lower, upper);
+            add_triangle_area(sink, off, upper, lower, right);
+            add_triangle_area(sink, off, lower, se, right);
+            add_contour_segment(sink, off, left, lower);
+            add_contour_segment(sink, off, right, upper);
+        }
         break;
     case 7:
         add_triangle_area(sink, off, upper, nw, sw); // missing ne corner
@@ -475,12 +542,19 @@ void add_interpolated_four_neighborhood(SINK *sink, vec_t const &off,
         add_contour_segment(sink, off, upper, right);
         break;
     case 9:
-        add_triangle_area(sink, off, sw, lower, left);
-        add_triangle_area(sink, off, lower, right, left);
-        add_triangle_area(sink, off, left, right, upper);
-        add_triangle_area(sink, off, upper, right, ne);
-        add_contour_segment(sink, off, lower, right);
-        add_contour_segment(sink, off, upper, left);
+        if (flags & CONNECT_BLACK) {
+            add_contour_segment(sink, off, lower, left);
+            add_triangle_area(sink, off, sw, lower, left);
+            add_contour_segment(sink, off, upper, right);
+            add_triangle_area(sink, off, upper, right, ne);
+        } else {
+            add_triangle_area(sink, off, sw, lower, left);
+            add_triangle_area(sink, off, lower, right, left);
+            add_triangle_area(sink, off, left, right, upper);
+            add_triangle_area(sink, off, upper, right, ne);
+            add_contour_segment(sink, off, lower, right);
+            add_contour_segment(sink, off, upper, left);
+        }
         break;
     case 10:
         add_triangle_area(sink, off, nw, left, right); // upper half
@@ -525,8 +599,9 @@ void add_interpolated_four_neighborhood(SINK *sink, vec_t const &off,
 // a piece of the contour has been identified.
 // processes the whole photo, (w-2)x(h-2) neighborhoods,
 template <typename SINK, typename PHOTO, typename THRESHOLD>
-void trace_isocontour_interpolated_marching_squares(SINK *sink, const PHOTO &ph,
-                                                    const THRESHOLD &threshold)
+void trace_isocontour_interpolated_marching_squares(
+    SINK *sink, const PHOTO &ph, const THRESHOLD &threshold,
+    MarchingSquaresFlags flags = MarchingSquaresFlags())
 {
     const int width = ph.width();
     const int height = ph.height();
@@ -537,39 +612,48 @@ void trace_isocontour_interpolated_marching_squares(SINK *sink, const PHOTO &ph,
     for (int j = 0; j < height - 1; ++j)
         for (int i = 0; i < width - 1; ++i) {
             vec_t off = origin + vec_t{i * pix_diag[0], j * pix_diag[1]};
-            add_interpolated_four_neighborhood(sink, off, pix_diag, ph(i, j),
-                                               ph(i, j + 1), ph(i + 1, j),
-                                               ph(i + 1, j + 1), threshold);
+            add_interpolated_four_neighborhood(
+                sink, off, pix_diag, ph(i, j), ph(i, j + 1), ph(i + 1, j),
+                ph(i + 1, j + 1), threshold, flags);
         }
 }
 
 // convenience wrapper to compute IMT's with interpolated marching squares
 template <typename PHOTO>
-MinkowskiAccumulator imt_interpolated_marching_squares(const PHOTO &ph,
-                                                       double threshold)
+MinkowskiAccumulator imt_interpolated_marching_squares(
+    const PHOTO &ph, double threshold,
+    MarchingSquaresFlags flags = MarchingSquaresFlags())
 {
+    if (flags & ANALYZE_BLACK) {
+        auto negated = make_negated_view(ph);
+        flags ^= CONNECT_BLACK; // toggle connect black (meanings of b,w change)
+        flags ^= ANALYZE_BLACK; // reset analyze black
+        return imt_interpolated_marching_squares(negated, -threshold, flags);
+    }
+
     MinkowskiAccumulator acc;
-    trace_isocontour_interpolated_marching_squares(&acc, ph, threshold);
+    trace_isocontour_interpolated_marching_squares(&acc, ph, threshold, flags);
     return acc;
 }
 
+// convenience wrapper to compute IMT's with regular marching squares
 // reproduce (inferior) results of regular marching squares
 // by applying interpolated marching squares on a binarized image
-template <typename SINK, typename PHOTO, typename THRESHOLD>
-void trace_isocontour_regular_marching_squares(SINK *sink, const PHOTO &ph,
-                                               const THRESHOLD &threshold)
-{
-    auto thr_ph = make_thresholded_view(ph, threshold);
-    trace_isocontour_interpolated_marching_squares(sink, thr_ph, .5);
-}
-
-// convenience wrapper to compute IMT's with regular marching squares
 template <typename PHOTO>
-MinkowskiAccumulator imt_regular_marching_squares(const PHOTO &ph,
-                                                  double threshold)
+MinkowskiAccumulator imt_regular_marching_squares(
+    const PHOTO &ph, double threshold,
+    MarchingSquaresFlags flags = MarchingSquaresFlags())
 {
+    if (flags & ANALYZE_BLACK) {
+        auto negated = make_negated_view(ph);
+        flags ^= CONNECT_BLACK; // toggle connect black (meanings of b,w change)
+        flags ^= ANALYZE_BLACK; // reset analyze black
+        return imt_interpolated_marching_squares(negated, -threshold, flags);
+    }
+
     MinkowskiAccumulator acc;
-    trace_isocontour_regular_marching_squares(&acc, ph, threshold);
+    auto thr_ph = make_thresholded_view(ph, threshold);
+    trace_isocontour_interpolated_marching_squares(&acc, thr_ph, .5, flags);
     return acc;
 }
 
@@ -585,6 +669,7 @@ MinkowskiAccumulator imt_polygon(const CONTAINER &vertices)
 
 using complex_image_t = BasicPhoto<complex_t>;
 
+// FIXME expose flags
 template <typename PHOTO, typename THRESHOLD>
 void minkowski_map_interpolated_marching_squares(complex_image_t *out,
                                                  const PHOTO &ph,
@@ -606,9 +691,9 @@ void minkowski_map_interpolated_marching_squares(complex_image_t *out,
         for (int i = 0; i <= lastx; ++i) {
             vec_t const off = origin + vec_t{i * pix_diag[0], j * pix_diag[1]};
             MinkowskiAccumulator minkval;
-            add_interpolated_four_neighborhood(&minkval, off, pix_diag, ph(i, j),
-                                               ph(i, j + 1), ph(i + 1, j),
-                                               ph(i + 1, j + 1), threshold);
+            add_interpolated_four_neighborhood(
+                &minkval, off, pix_diag, ph(i, j), ph(i, j + 1), ph(i + 1, j),
+                ph(i + 1, j + 1), threshold, MarchingSquaresFlags());
             (*out)(i, j) = minkval.imt(s);
         }
     }
