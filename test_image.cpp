@@ -186,8 +186,6 @@ TEST_CASE("marching squares algorithm")
     }
 }
 
-static complex_t const I(0, 1);
-
 TEST_CASE("simple marching squares IMT examples")
 {
     SECTION("a single pixel")
@@ -255,10 +253,10 @@ TEST_CASE("simple marching squares IMT examples")
             CHECK(i_imt.perimeter() == approx(ref_peri));
             CHECK(i_imt.imt(0) == approx(ref_peri));
             CHECK(i_imt.imt(2) == approx(ref_psi2));
-            CHECK(i_imt.imt(3) == approx(ref_psi3 * std::exp(I * M_PI)));
+            CHECK(i_imt.imt(3) == approx(-ref_psi3));
             CHECK(i_imt.imt(4) == approx(ref_psi4));
             CHECK(r_imt.imt(2) == approx(ref_psi2));
-            CHECK(r_imt.imt(3) == approx(ref_psi3 * std::exp(I * M_PI)));
+            CHECK(r_imt.imt(3) == approx(-ref_psi3));
             CHECK(r_imt.imt(4) == approx(ref_psi4));
         }
 
@@ -293,10 +291,10 @@ TEST_CASE("simple marching squares IMT examples")
                 CHECK(i_imt.perimeter() == approx(ref_peri));
                 CHECK(i_imt.imt(0) == approx(ref_peri));
                 CHECK(i_imt.imt(2) == approx(ref_psi2));
-                CHECK(i_imt.imt(3) == approx(ref_psi3 * std::exp(I * M_PI)));
+                CHECK(i_imt.imt(3) == approx(-ref_psi3));
                 CHECK(i_imt.imt(4) == approx(ref_psi4));
                 CHECK(r_imt.imt(2) == approx(ref_psi2));
-                CHECK(r_imt.imt(3) == approx(ref_psi3 * std::exp(I * M_PI)));
+                CHECK(r_imt.imt(3) == approx(-ref_psi3));
                 CHECK(r_imt.imt(4) == approx(ref_psi4));
             }
             SECTION("orientation #2, test padding")
