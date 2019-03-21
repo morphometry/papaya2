@@ -42,10 +42,10 @@ struct TestPhoto : BasicPhoto<int>
         size_t first__ = data.find_first_of('_');
         if (first__ == data.npos)
             throw std::runtime_error("no rowbreak in TestPhoto");
-        numx = first__;
+        int numx = first__;
         if (data.size() % (numx + 1u))
             throw std::runtime_error("invalid TestPhoto");
-        numy = data.size() / (numx + 1u);
+        int numy = data.size() / (numx + 1u);
         if (numx == 0u || numy == 0u)
             throw std::runtime_error("empty TestPhoto");
         set_coordinates(0., 0., TP_PIXEL_SIDE * numx, TP_PIXEL_SIDE * numy,
@@ -67,7 +67,7 @@ struct TestPhoto : BasicPhoto<int>
   private:
     int unchecked_at(const string &data, int x, int y)
     {
-        return data[(numy - 1 - y) * (numx + 1) + x];
+        return data[(height() - 1 - y) * (width() + 1) + x];
     }
 };
 

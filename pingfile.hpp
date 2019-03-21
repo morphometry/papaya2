@@ -80,7 +80,10 @@ struct PingFile
     int width() const { return width_; }
     int height() const { return height_; }
     papaya2::vec_t origin() const { return {0., 0.}; }
-    papaya2::vec_t upper_right() const { return { double(width()), double(height()) }; }
+    papaya2::vec_t upper_right() const
+    {
+        return {double(width()), double(height())};
+    }
 };
 
 } // namespace

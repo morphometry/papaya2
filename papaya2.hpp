@@ -35,16 +35,16 @@ namespace papaya2 {
 template <typename TYPE> struct BasicPhoto
 {
     void set_coordinates(double x0, double y0, double x1, double y1,
-                         int width_ /* number of pixels */,
-                         int height_ /* dito */)
+                         int width /* number of pixels */,
+                         int height /* dito */)
     {
-        origin_x = x0;
-        origin_y = y0;
-        numx = width_;
-        numy = height_;
+        origin_ = {x0, y0};
+        ur_ = {x1, y1};
+        width_ = width;
+        height_ = height;
         lenx = (x1 - x0) / width_;
         leny = (y1 - y0) / height_;
-        data.resize(size_t(numx + 2) * size_t(numy + 2));
+        data.resize(size_t(width + 2) * size_t(height + 2));
     }
 
     // helper method to fill the Photo with a discretized
@@ -53,10 +53,10 @@ template <typename TYPE> struct BasicPhoto
     // the method below uses integration instead of sampling.
     template <typename FUNCTION> void sample_function(const FUNCTION &function)
     {
-        for (int j = 0; j < numy; ++j) {
-            for (int i = 0; i < numx; ++i) {
-                double x = (i + .5) * lenx + origin_x;
-                double y = (j + .5) * leny + origin_y;
+        for (int j = 0; j < height(); ++j) {
+            for (int i = 0; i < width(); ++i) {
+                double x = (i + .5) * lenx + origin_[0];
+                double y = (j + .5) * leny + origin_[1];
                 at(i, j) = function(x, y);
             }
         }
@@ -67,14 +67,14 @@ template <typename TYPE> struct BasicPhoto
     template <typename FUNCTION>
     void integrate_function(const FUNCTION &function)
     {
-        for (int j = 0; j < numy; ++j)
-            for (int i = 0; i < numx; ++i) {
+        for (int j = 0; j < height(); ++j)
+            for (int i = 0; i < width(); ++i) {
                 const int ss = 5;
                 int total_w = 0;
                 for (int subj = 0; subj <= ss; ++subj)
                     for (int subi = 0; subi <= ss; ++subi) {
-                        double x = (i + subi * 1. / ss) * lenx + origin_x;
-                        double y = (j + subj * 1. / ss) * leny + origin_y;
+                        double x = (i + subi * 1. / ss) * lenx + origin_[0];
+                        double y = (j + subj * 1. / ss) * leny + origin_[1];
                         int w = (1 + (subi != 0 && subi != ss)) *
                                 (1 + (subj != 0 && subj != ss));
                         total_w += w;
@@ -90,32 +90,22 @@ template <typename TYPE> struct BasicPhoto
     // write access
     TYPE &operator()(int i, int j) { return at(i, j); }
 
-    int width() const { return numx; }
-    int height() const { return numy; }
-    vec_t origin() const { return {origin_x, origin_y}; }
-    vec_t upper_right() const
-    {
-        return {origin_x + numx * lenx, origin_y + numy * leny};
-    }
-
-    friend
-    vec_t pixel_diagonal(BasicPhoto<TYPE> const &photo)
-    {
-        return { photo.lenx, photo.leny };
-    }
+    int width() const { return width_; }
+    int height() const { return height_; }
+    vec_t origin() const { return origin_; }
+    vec_t upper_right() const { return ur_; }
 
   protected:
-    int numx, numy;    // number of pixels
-    double lenx, leny; // dimensions of each pixel
-    double origin_x,
-        origin_y; // coordinates of lower-left corner of first pixel
+    int width_, height_; // number of pixels
+    double lenx, leny;   // dimensions of each pixel
+    vec_t origin_, ur_;
     std::vector<TYPE> data;
 
     size_t pixel_index(int i, int j) const
     {
-        if (i < 0 || i >= numx || j < 0 || j >= numy)
+        if (i < 0 || i >= width() || j < 0 || j >= height())
             throw std::range_error("invalid pixel index in BasicPhoto");
-        return size_t(j + 1) * size_t(numx + 1) + size_t(i) + 1u;
+        return size_t(j + 1) * size_t(width() + 1) + size_t(i) + 1u;
     }
 
     TYPE &at(int i, int j) { return data[pixel_index(i, j)]; }
@@ -124,11 +114,10 @@ template <typename TYPE> struct BasicPhoto
 };
 
 // compute pixel diagonal from coordinate system
-template <typename PHOTO>
-vec_t pixel_diagonal(PHOTO const &photo)
+template <typename PHOTO> vec_t pixel_diagonal(PHOTO const &photo)
 {
     vec_t const diagonal = photo.upper_right() - photo.origin();
-    return { diagonal[0] / photo.width(), diagonal[1] / photo.height() };
+    return {diagonal[0] / photo.width(), diagonal[1] / photo.height()};
 }
 
 using Photo = BasicPhoto<double>;
@@ -196,8 +185,14 @@ template <typename PHOTO> struct PaddingAdapter : PhotoAdapter<PHOTO>
 
     int width() const { return original.width() + 2; }
     int height() const { return original.height() + 2; }
-    vec_t origin() const { return original.origin() - pixel_diagonal(original); }
-    vec_t upper_right() const { return original.upper_right() + pixel_diagonal(original); }
+    vec_t origin() const
+    {
+        return original.origin() - pixel_diagonal(original);
+    }
+    vec_t upper_right() const
+    {
+        return original.upper_right() + pixel_diagonal(original);
+    }
 };
 
 template <typename PHOTO>
@@ -605,8 +600,7 @@ void minkowski_map_interpolated_marching_squares(complex_image_t *out,
     vec_t mmap_origin = ph.origin() + half_a_pixdiag;
     vec_t mmap_upperright = ph.upper_right() - half_a_pixdiag;
     out->set_coordinates(mmap_origin[0], mmap_origin[1], mmap_upperright[0],
-                         mmap_upperright[1], lastx + 1,
-                         lasty + 1);
+                         mmap_upperright[1], lastx + 1, lasty + 1);
 
     for (int j = 0; j <= lasty; ++j) {
         for (int i = 0; i <= lastx; ++i) {
