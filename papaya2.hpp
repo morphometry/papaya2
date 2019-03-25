@@ -323,6 +323,9 @@ struct MinkowskiAccumulator
             throw std::logic_error("imt(" + std::to_string(s) + ") called");
     }
 
+    double beta102() const{return (1. - msm(2)) / (1. + msm(2));}
+    double isoper()  const{return 4 * M_PI * area() / (perimeter()*perimeter());} //isoperimetric ratio
+
   private:
     static double kahan_triangle_area(vec_t v0, vec_t v1, vec_t v2)
     {
