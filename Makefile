@@ -9,6 +9,7 @@ CGAL_SUPPORT = 1
 CGAL_LDFLAGS = -lCGAL -LCGAL_Core -lgmp
 # set to "dll" for Windows
 SO_EXTENSION = so
+CLANGFORMAT = clang-format
 
 # modify defaults here if necessary
 -include features.mk
