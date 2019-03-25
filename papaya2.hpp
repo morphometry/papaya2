@@ -325,10 +325,7 @@ struct MinkowskiAccumulator
 
     double beta102() const { return (1. - msm(2)) / (1. + msm(2)); }
     // isoperimetric ratio
-    double isoper() const
-    {
-        return 2 * TWO_PI * area() / fsq(perimeter());
-    }
+    double isoper() const { return 2 * TWO_PI * area() / fsq(perimeter()); }
 
   private:
     static double kahan_triangle_area(vec_t v0, vec_t v1, vec_t v2)

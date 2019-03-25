@@ -127,59 +127,84 @@ TEST_CASE("marching squares algorithm")
             CHECK(r_imt.area() == ref_volume[i] * TP_PIXEL_AREA);
             CHECK_NOTHROW(check_msq_positively_oriented(ph, CONNECT_WHITE));
             CHECK_NOTHROW(check_msq_positively_oriented(ph, CONNECT_BLACK));
-            auto b_imt = imt_interpolated_marching_squares(ph, .5, ANALYZE_BLACK);
-            CHECK(TP_PIXEL_AREA - b_imt.area() == TP_PIXEL_AREA * ref_volume[i]);
+            auto b_imt =
+                imt_interpolated_marching_squares(ph, .5, ANALYZE_BLACK);
+            CHECK(TP_PIXEL_AREA - b_imt.area() ==
+                  TP_PIXEL_AREA * ref_volume[i]);
             CHECK(b_imt.imt(0) == +r_imt.imt(0));
             CHECK(b_imt.imt(3) == -r_imt.imt(3));
             b_imt = imt_regular_marching_squares(ph, .5, ANALYZE_BLACK);
-            CHECK(TP_PIXEL_AREA - b_imt.area() == TP_PIXEL_AREA * ref_volume[i]);
+            CHECK(TP_PIXEL_AREA - b_imt.area() ==
+                  TP_PIXEL_AREA * ref_volume[i]);
             CHECK(b_imt.imt(0) == +r_imt.imt(0));
             CHECK(b_imt.imt(3) == -r_imt.imt(3));
         }
     }
 
-    SECTION("negating should flip the normals") {
+    SECTION("negating should flip the normals")
+    {
         Photo ph;
         ph.set_coordinates(0, 0, 2, 2, 2, 2);
-        ph(0,1) = -1.3; ph(1,1) = 0.7;
-        ph(0,0) = -2.1; ph(1,0) = 1.7;
-        SECTION("config #12") {
+        ph(0, 1) = -1.3;
+        ph(1, 1) = 0.7;
+        ph(0, 0) = -2.1;
+        ph(1, 0) = 1.7;
+        SECTION("config #12")
+        {
             auto i_imt = imt_interpolated_marching_squares(ph, 0.);
-            auto b_imt = imt_interpolated_marching_squares(ph, 0., ANALYZE_BLACK);
+            auto b_imt =
+                imt_interpolated_marching_squares(ph, 0., ANALYZE_BLACK);
             CHECK(i_imt.imt(3) == -b_imt.imt(3));
             CHECK(i_imt.imt(0) == b_imt.imt(0));
         }
-        SECTION("config #12, connect black") {
-            auto i_imt = imt_interpolated_marching_squares(ph, 0., CONNECT_BLACK);
-            auto b_imt = imt_interpolated_marching_squares(ph, 0., ANALYZE_BLACK | CONNECT_BLACK);
+        SECTION("config #12, connect black")
+        {
+            auto i_imt =
+                imt_interpolated_marching_squares(ph, 0., CONNECT_BLACK);
+            auto b_imt = imt_interpolated_marching_squares(
+                ph, 0., ANALYZE_BLACK | CONNECT_BLACK);
             CHECK(i_imt.imt(3) == -b_imt.imt(3));
             CHECK(i_imt.imt(0) == b_imt.imt(0));
         }
-        ph(0,1) = 0.7; ph(1,1) = -1.3;
-        ph(0,0) = -2.1; ph(1,0) = 1.7;
-        SECTION("critical config #6") {
+        ph(0, 1) = 0.7;
+        ph(1, 1) = -1.3;
+        ph(0, 0) = -2.1;
+        ph(1, 0) = 1.7;
+        SECTION("critical config #6")
+        {
             auto i_imt = imt_interpolated_marching_squares(ph, 0.);
-            auto b_imt = imt_interpolated_marching_squares(ph, 0., ANALYZE_BLACK);
+            auto b_imt =
+                imt_interpolated_marching_squares(ph, 0., ANALYZE_BLACK);
             CHECK(i_imt.imt(3) == -b_imt.imt(3));
             CHECK(i_imt.imt(0) == b_imt.imt(0));
         }
-        SECTION("critical config #6, connect white") {
-            auto i_imt = imt_interpolated_marching_squares(ph, 0., CONNECT_BLACK);
-            auto b_imt = imt_interpolated_marching_squares(ph, 0., ANALYZE_BLACK | CONNECT_BLACK);
+        SECTION("critical config #6, connect white")
+        {
+            auto i_imt =
+                imt_interpolated_marching_squares(ph, 0., CONNECT_BLACK);
+            auto b_imt = imt_interpolated_marching_squares(
+                ph, 0., ANALYZE_BLACK | CONNECT_BLACK);
             CHECK(i_imt.imt(3) == -b_imt.imt(3));
             CHECK(i_imt.imt(0) == b_imt.imt(0));
         }
-        ph(0,1) = -0.7; ph(1,1) = 1.3;
-        ph(0,0) = 2.1; ph(1,0) = -1.7;
-        SECTION("critical config #9") {
+        ph(0, 1) = -0.7;
+        ph(1, 1) = 1.3;
+        ph(0, 0) = 2.1;
+        ph(1, 0) = -1.7;
+        SECTION("critical config #9")
+        {
             auto i_imt = imt_interpolated_marching_squares(ph, 0.);
-            auto b_imt = imt_interpolated_marching_squares(ph, 0., ANALYZE_BLACK);
+            auto b_imt =
+                imt_interpolated_marching_squares(ph, 0., ANALYZE_BLACK);
             CHECK(i_imt.imt(3) == -b_imt.imt(3));
             CHECK(i_imt.imt(0) == b_imt.imt(0));
         }
-        SECTION("critical config #9, connect white") {
-            auto i_imt = imt_interpolated_marching_squares(ph, 0., CONNECT_BLACK);
-            auto b_imt = imt_interpolated_marching_squares(ph, 0., ANALYZE_BLACK | CONNECT_BLACK);
+        SECTION("critical config #9, connect white")
+        {
+            auto i_imt =
+                imt_interpolated_marching_squares(ph, 0., CONNECT_BLACK);
+            auto b_imt = imt_interpolated_marching_squares(
+                ph, 0., ANALYZE_BLACK | CONNECT_BLACK);
             CHECK(i_imt.imt(3) == -b_imt.imt(3));
             CHECK(i_imt.imt(0) == b_imt.imt(0));
         }
