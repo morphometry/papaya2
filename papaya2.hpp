@@ -652,7 +652,7 @@ MinkowskiAccumulator imt_regular_marching_squares(
         auto negated = make_negated_view(ph);
         flags ^= CONNECT_BLACK; // toggle connect black (meanings of b,w change)
         flags ^= ANALYZE_BLACK; // reset analyze black
-        return imt_interpolated_marching_squares(negated, -threshold, flags);
+        return imt_regular_marching_squares(negated, -threshold, flags);
     }
 
     MinkowskiAccumulator acc;
