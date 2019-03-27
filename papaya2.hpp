@@ -161,28 +161,6 @@ auto make_thresholded_view(const PHOTO &p, const THRESHOLD &t)
     return ThresholdingAdapter<PHOTO, THRESHOLD>(p, t);
 }
 
-// do not use directly, use make_negated_view.
-template <typename PHOTO> struct NegatingAdapter : PhotoAdapter<PHOTO>
-{
-    using PhotoAdapter<PHOTO>::original;
-
-    NegatingAdapter(const PHOTO &ph) : PhotoAdapter<PHOTO>(ph) {}
-
-    double operator()(int x, int y) const { return -double(original(x, y)); }
-};
-
-template <typename PHOTO>
-auto make_negated_view(const PHOTO &p) -> NegatingAdapter<PHOTO>
-{
-    return NegatingAdapter<PHOTO>(p);
-}
-
-template <typename PHOTO>
-auto make_negated_view(const NegatingAdapter<PHOTO> &p) -> PHOTO
-{
-    return p.original;
-}
-
 // adapter to pad a photo.
 // returns photo(i,j) if (i,j) is in the original image,
 // and padding_value otherwise.  data in the photo is cast to double.
@@ -464,8 +442,19 @@ void add_interpolated_four_neighborhood(SINK *sink, vec_t const &off,
                                         double threshold,
                                         MarchingSquaresFlags flags)
 {
-    unsigned lut_index = (ll >= threshold) * 1 + (ul >= threshold) * 2 +
-                         (lr >= threshold) * 4 + (ur >= threshold) * 8;
+    unsigned lut_index;
+
+    if (flags & ANALYZE_BLACK)
+    {
+        lut_index = (ll < threshold) * 1 + (ul < threshold) * 2 +
+                     (lr < threshold) * 4 + (ur < threshold) * 8;
+        flags ^= CONNECT_BLACK;
+    }
+    else
+    {
+        lut_index = (ll >= threshold) * 1 + (ul >= threshold) * 2 +
+                    (lr >= threshold) * 4 + (ur >= threshold) * 8;
+    }
 
     // interpolate between 0.5 and 1.5.
     auto msq_interp = [](double left, double threshold,
@@ -628,13 +617,6 @@ MinkowskiAccumulator imt_interpolated_marching_squares(
     const PHOTO &ph, double threshold,
     MarchingSquaresFlags flags = MarchingSquaresFlags())
 {
-    if (flags & ANALYZE_BLACK) {
-        auto negated = make_negated_view(ph);
-        flags ^= CONNECT_BLACK; // toggle connect black (meanings of b,w change)
-        flags ^= ANALYZE_BLACK; // reset analyze black
-        return imt_interpolated_marching_squares(negated, -threshold, flags);
-    }
-
     MinkowskiAccumulator acc;
     trace_isocontour_interpolated_marching_squares(&acc, ph, threshold, flags);
     return acc;
@@ -648,13 +630,6 @@ MinkowskiAccumulator imt_regular_marching_squares(
     const PHOTO &ph, double threshold,
     MarchingSquaresFlags flags = MarchingSquaresFlags())
 {
-    if (flags & ANALYZE_BLACK) {
-        auto negated = make_negated_view(ph);
-        flags ^= CONNECT_BLACK; // toggle connect black (meanings of b,w change)
-        flags ^= ANALYZE_BLACK; // reset analyze black
-        return imt_regular_marching_squares(negated, -threshold, flags);
-    }
-
     MinkowskiAccumulator acc;
     auto thr_ph = make_thresholded_view(ph, threshold);
     trace_isocontour_interpolated_marching_squares(&acc, thr_ph, .5, flags);
