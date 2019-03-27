@@ -73,49 +73,49 @@ struct TestPhoto : BasicPhoto<int>
 
 TEST_CASE("marching squares algorithm")
 {
+    const CApprox ref_volume[16] = {
+        approx(0.),   approx(.125), approx(.125), approx(.5),
+        approx(.125), approx(.5),   approx(.75),  approx(.875),
+        approx(.125), approx(.75),  approx(.5),   approx(.875),
+        approx(.5),   approx(.875), approx(.875), approx(1.)};
+    const char *config[16] = {"  _"
+                              "  _",
+                              "  _"
+                              "x _",
+                              "x _"
+                              "  _",
+                              "x _"
+                              "x _",
+
+                              "  _"
+                              " x_",
+                              "  _"
+                              "xx_",
+                              "x _"
+                              " x_",
+                              "x _"
+                              "xx_",
+
+                              " x_"
+                              "  _",
+                              " x_"
+                              "x _",
+                              "xx_"
+                              "  _",
+                              "xx_"
+                              "x _",
+
+                              " x_"
+                              " x_",
+                              " x_"
+                              "xx_",
+                              "xx_"
+                              " x_",
+                              "xx_"
+                              "xx_"};
+
     SECTION("all 2x2 neighborhoods")
     {
-        const CApprox ref_volume[16] = {
-            approx(0.),   approx(.125), approx(.125), approx(.5),
-            approx(.125), approx(.5),   approx(.75),  approx(.875),
-            approx(.125), approx(.75),  approx(.5),   approx(.875),
-            approx(.5),   approx(.875), approx(.875), approx(1.)};
-        const char *config[16] = {"  _"
-                                  "  _",
-                                  "  _"
-                                  "x _",
-                                  "x _"
-                                  "  _",
-                                  "x _"
-                                  "x _",
-
-                                  "  _"
-                                  " x_",
-                                  "  _"
-                                  "xx_",
-                                  "x _"
-                                  " x_",
-                                  "x _"
-                                  "xx_",
-
-                                  " x_"
-                                  "  _",
-                                  " x_"
-                                  "x _",
-                                  "xx_"
-                                  "  _",
-                                  "xx_"
-                                  "x _",
-
-                                  " x_"
-                                  " x_",
-                                  " x_"
-                                  "xx_",
-                                  "xx_"
-                                  " x_",
-                                  "xx_"
-                                  "xx_"};
-
         for (int i = 0; i != 16; ++i) {
             INFO("marching squares configuration " << i);
             TestPhoto ph(config[i]);
@@ -127,17 +127,48 @@ TEST_CASE("marching squares algorithm")
             CHECK(r_imt.area() == ref_volume[i] * TP_PIXEL_AREA);
             CHECK_NOTHROW(check_msq_positively_oriented(ph, CONNECT_WHITE));
             CHECK_NOTHROW(check_msq_positively_oriented(ph, CONNECT_BLACK));
-            auto b_imt =
-                imt_interpolated_marching_squares(ph, .5, ANALYZE_BLACK);
-            CHECK(TP_PIXEL_AREA - b_imt.area() ==
-                  TP_PIXEL_AREA * ref_volume[i]);
-            CHECK(b_imt.imt(0) == +r_imt.imt(0));
-            CHECK(b_imt.imt(3) == -r_imt.imt(3));
-            b_imt = imt_regular_marching_squares(ph, .75, ANALYZE_BLACK);
-            CHECK(TP_PIXEL_AREA - b_imt.area() ==
-                  TP_PIXEL_AREA * ref_volume[i]);
-            CHECK(b_imt.imt(0) == +r_imt.imt(0));
-            CHECK(b_imt.imt(3) == -r_imt.imt(3));
+        }
+
+        SECTION("regular marching squares: two phases should add to TP_PIXEL_AREA, and have the same Psi2")
+        {
+            // test when threshold equals pixel intensity
+            // regular marching squares
+            for (int i = 0; i != 16; ++i)
+            {
+                TestPhoto ph(config[i]);
+                auto b_imt = imt_regular_marching_squares(ph, 1., ANALYZE_BLACK | CONNECT_WHITE);
+                auto w_imt = imt_regular_marching_squares(ph, 1., ANALYZE_WHITE | CONNECT_WHITE);
+                CHECK(b_imt.area() + w_imt.area() == approx(TP_PIXEL_AREA));
+                CHECK(b_imt.imt(0) == approx(+w_imt.imt(0)));
+                CHECK(b_imt.imt(2) == approx(+w_imt.imt(2)));
+                CHECK(b_imt.imt(3) == approx(-w_imt.imt(3)));
+                b_imt = imt_regular_marching_squares(ph, 1., ANALYZE_BLACK | CONNECT_BLACK);
+                w_imt = imt_regular_marching_squares(ph, 1., ANALYZE_WHITE | CONNECT_BLACK);
+                CHECK(b_imt.area() + w_imt.area() == approx(TP_PIXEL_AREA));
+                CHECK(b_imt.imt(0) == approx(+w_imt.imt(0)));
+                CHECK(b_imt.imt(2) == approx(+w_imt.imt(2)));
+                CHECK(b_imt.imt(3) == approx(-w_imt.imt(3)));
+            }
+        }
+        SECTION("interpolated marching squares: two phases should add to TP_PIXEL_AREA, and have the same Psi2")
+        {
+            // interpolated marching squares
+            for (int i = 0; i != 16; ++i)
+            {
+                TestPhoto ph(config[i]);
+                auto b_imt = imt_interpolated_marching_squares(ph, 1., ANALYZE_BLACK | CONNECT_WHITE);
+                auto w_imt = imt_interpolated_marching_squares(ph, 1., ANALYZE_WHITE | CONNECT_WHITE);
+                CHECK(b_imt.area() + w_imt.area() == approx(TP_PIXEL_AREA));
+                CHECK(b_imt.imt(0) == approx(+w_imt.imt(0)));
+                CHECK(b_imt.imt(2) == approx(+w_imt.imt(2)));
+                CHECK(b_imt.imt(3) == approx(-w_imt.imt(3)));
+                b_imt = imt_interpolated_marching_squares(ph, 1., ANALYZE_BLACK | CONNECT_BLACK);
+                w_imt = imt_interpolated_marching_squares(ph, 1., ANALYZE_WHITE | CONNECT_BLACK);
+                CHECK(b_imt.area() + w_imt.area() == approx(TP_PIXEL_AREA));
+                CHECK(b_imt.imt(0) == approx(+w_imt.imt(0)));
+                CHECK(b_imt.imt(2) == approx(+w_imt.imt(2)));
+                CHECK(b_imt.imt(3) == approx(-w_imt.imt(3)));
+            }
         }
     }
 
@@ -241,6 +272,10 @@ TEST_CASE("simple marching squares IMT examples")
         CHECK(r_imt.imt(2) == approx(ref_psi2));
         CHECK(r_imt.imt(3) == approx(ref_psi3));
         CHECK(r_imt.imt(4) == approx(ref_psi4));
+        auto const r_imt_2 = imt_regular_marching_squares(one_pixel, 1);
+        CHECK(r_imt_2.area() == approx(ref_area));
+        auto const r_imt_b = imt_regular_marching_squares(one_pixel, 1, ANALYZE_BLACK);
+        CHECK(r_imt_b.area() == approx(4 * (1. - .125) * TP_PIXEL_AREA));
     }
     SECTION("tetromino1")
     {
