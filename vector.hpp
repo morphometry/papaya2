@@ -1,9 +1,10 @@
-// (c) 2018 Sebastian Kapfer <sebastian.kapfer@fau.de>, FAU Erlangen
+#ifndef POSTLHC_VECTOR_HPP_INCLUDED 
+#define POSTLHC_VECTOR_HPP_INCLUDED 
+// (c) 2018-2019 Sebastian Kapfer <sebastian.kapfer@fau.de>, FAU Erlangen
 // a few small routines for doing fixed-length vector operations with std::array
 // (extend as necessary)
 // these routines are packed in their own namespaces so they can be enabled as
 // required.
-#pragma once
 
 #include <array>
 #include <cassert>
@@ -205,3 +206,5 @@ std::ostream &operator<<(std::ostream &os, const std::array<TYPE, DIM> &rhs)
 }
 
 } // namespace vector_printing_for_std_array
+
+#endif /* POSTLHC_VECTOR_HPP_INCLUDED */
