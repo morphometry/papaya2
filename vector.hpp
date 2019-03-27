@@ -159,8 +159,8 @@ auto inner_product(const VEC1 &lhs, const VEC2 &rhs)
     return ret;
 }
 
-template <typename TYPE, size_t DIM, typename TYPE2>
-auto elementwise_product(const std::array<TYPE, DIM> &lhs, const TYPE2 &rhs)
+template <typename TYPE, size_t DIM, typename VEC2>
+auto elementwise_product(const std::array<TYPE, DIM> &lhs, const VEC2 &rhs)
     -> std::array<decltype(lhs[0] * rhs[0]), DIM>
 {
     std::array<decltype(lhs[0] * rhs[0]), DIM> ret;
