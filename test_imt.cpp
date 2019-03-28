@@ -43,11 +43,8 @@ TEST_CASE("MinkowskiAccumulator struct")
         MinkowskiAccumulator acc;
         trace_ellipse(&acc, 0., num_segments);
         CHECK(acc.imt(2) == approx(0.));
-        ;
         CHECK(acc.imt(3) == approx(0.));
-        ;
         CHECK(acc.imt(4) == approx(0.));
-        ;
     }
     SECTION("shape is a 3:8 ellipse")
     {
@@ -56,7 +53,6 @@ TEST_CASE("MinkowskiAccumulator struct")
         CHECK(acc.imt(2) / acc.perimeter() ==
               approx(-0.63070026151848068207).tolerance(1e-6));
         CHECK(acc.imt(3) / acc.perimeter() == approx(0.).tolerance(1e-6));
-        ;
         CHECK(acc.imt(4) / acc.perimeter() ==
               approx(0.34844502478902471207).tolerance(1e-6));
         CHECK(acc.imt(6) / acc.perimeter() ==
