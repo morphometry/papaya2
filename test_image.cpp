@@ -2,7 +2,6 @@
 #include "papaya2.hpp"
 #include "pingfile.hpp"
 #include "test_helpers.hpp"
-#include <sstream>
 
 using namespace papaya2;
 
@@ -75,7 +74,6 @@ TEST_CASE("marching squares algorithm")
 {
     // volumes of all the 16 configs at the reference threshold
     // one half
-    // FIXME this should not be approx
     double const ref_volume[16] = {0.,  .125, .125, .5,  .125, .5,
                                    .75, .875, .125, .75, .5,   .875,
                                    .5,  .875, .875, 1.};
