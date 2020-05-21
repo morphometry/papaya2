@@ -5,9 +5,6 @@
 // 2018 Jenny Wagner <j.wagner@uni-heidelberg.de>
 #include "papaya2.hpp"
 #include "readarg.hpp"
-#ifndef HAVE_CCFITS
-#error banana requiresm the CCfits library to work.  (Set FITS_SUPPORT = 1.)
-#endif
 #include <CCfits/CCfits>
 #include <valarray>
 

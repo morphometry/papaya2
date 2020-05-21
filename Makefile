@@ -1,9 +1,6 @@
 # defaults
 CXXFLAGS += -g -O3
 CXXFLAGS += -Wall -Werror
-# enable FITS support being able to load FITS containers (in banana)
-FITS_SUPPORT = 1
-FITS_LDFLAGS = -lCCfits -lcfitsio
 # enable CGAL support for Voronoi diagrams (in ppanalysis and in pypaya2)
 CGAL_SUPPORT = 1
 CGAL_LDFLAGS = -lCGAL -LCGAL_Core -lgmp
@@ -13,12 +10,6 @@ CLANGFORMAT = clang-format
 
 # modify defaults here if necessary
 -include features.mk
-
-# FITS support
-ifeq ($(FITS_SUPPORT), 1)
-    CXXFLAGS += -DHAVE_CCFITS
-    LDFLAGS += $(FITS_LDFLAGS)
-endif
 
 # have CGAL for Voronoi diagrams?
 ifeq ($(CGAL_SUPPORT), 1)
@@ -66,8 +57,9 @@ features.mk:
 imganalysis: imganalysis.o
 	$(CXX) $(CXXFLAGS) -o $@ $< $(LDFLAGS)
 
-banana: banana.o
-	$(CXX) $(CXXFLAGS) -o $@ $< $(LDFLAGS)
+# special rule, to be able to load FITS containers
+banana: banana.cpp
+	$(CXX) $(CXXFLAGS) -o $@ $< $(LDFLAGS) -lCCfits -lcfitsio
 
 ppanalysis: ppanalysis.o
 	$(CXX) $(CXXFLAGS) -o $@ $< $(LDFLAGS)
