@@ -430,8 +430,6 @@ static auto const ANALYZE_WHITE = MarchingSquaresFlags(0);
 static auto const ANALYZE_BLACK = MarchingSquaresFlags(1);
 static auto const CONNECT_WHITE = MarchingSquaresFlags(0);
 static auto const CONNECT_BLACK = MarchingSquaresFlags(2);
-// FIXME implement
-// static auto const DISABLE_INTERPOLATION = MarchingSquaresFlags(4);
 
 // interpolated marching squares, core routine handling a 2x2 neighborhood
 // FIXME this is missing the curvature measures
