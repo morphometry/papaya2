@@ -33,19 +33,44 @@ bibliography: paper.bib
 # Summary
 
 A common challenge in scientific and technical domains is the quantitative
-description of geometries and shapes.  Minkowski Tensors are a family of
-versatile and robust higher-order shape descriptors, originating in integral
-geometry [@bib:AdvMatReview]. An accessible introduction to Minkowski Tensors
-can be found on [www.morphometry.org](https://morphometry.org/theory/anisotropy-analysis-by-imt/).
+description of geometries and shapes, e.g. in the analysis of microscope
+imagery or astronomical observation data.  Frequently, it is desirable to
+go beyond scalar shape metrics such as porosity and surface to volume ratios
+because the samples are anisotropic or because direction-dependent quantities
+such as conductances or elasticity are of interest.  Popular analysis software
+such as [ImageJ](https://imagej.nih.gov/ij/) and [SExtractor](https://imagej.nih.gov/ij/)
+provide only limited tooling for higher-order anisotropy characterization;
+usually only the tensor of inertia (rank 2) is available.
+
+Minkowski Tensors are a systematic family of versatile and robust higher-order
+shape descriptors, originating in integral geometry, see [@bib:AdvMatReview] for an introduction and detailed references.  They
+allow for shape characterization to arbitrary order and promise a path to
+systematic structure-function relationships for direction-dependent properties.
+Minkowski Tensors have previously been applied to data as diverse as ice grain
+microstructure [@bib:SchroederMicro2010],
+granular packing geometries [@bib:BeadPacksAnisotropic2010; @bib:Schaller2015],
+astronomical data [@bib:Kerscher2001; @bib:Joby2019; @bib:Klatt2020],
+neuronal data [@bib:Beisbart2006],
+foams [@bib:Saadatfar2012; @bib:Evans2017]
+and random sets, tessellations and point patterns [@bib:AnisoFluids2010; @bib:Springer2017].
+An accessible introduction to Minkowski Tensors can be found on
+[www.morphometry.org](https://morphometry.org/theory/anisotropy-analysis-by-imt/).
 
 Here, we present `papaya2`, a C++ library which facilitates computation of
-these metrics for two-dimensional geometries and shapes, including planar
-objects bounded by polygonal contours, collections of points (point
-patterns) and greyscale pixel data.  This library is accompanied by example
-programs and bindings for Matlab and the Python language.
+irreducible Minkowski Tensors for two-dimensional geometries and shapes, including planar
+objects bounded by polygonal contours, collections of points (point patterns)
+and greyscale pixel data.
 
+This library is accompanied by example programs and
+bindings for Matlab and the Python language.
 We also present the [Morphometer](https://morphometry.org/morphometer/), an
 interactive online resource for analyzing two-dimensional structures.
+
+`Papaya2` is a rewrite of [`papaya`](https://github.com/skapfer/papaya) with a
+library interface, support for irreducible Minkowski Tensors and interpolated marching squares, and
+extensions to Matlab and Python provided.  While the tensor of inertia is computed
+by many tools, we are not aware of other open-source software which provides
+higher-rank shape characterization in 2D.
 
 # C++ library papaya2
 
