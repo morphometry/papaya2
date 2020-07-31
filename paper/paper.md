@@ -1,5 +1,5 @@
 ---
-title: 'papaya2 & Morphometer: 2D Irreducible Minkowski Tensor computation'
+title: 'papaya2: 2D Irreducible Minkowski Tensor computation'
 tags:
   - Minkowski Tensors
   - Morphometry
@@ -166,7 +166,8 @@ point pattern analysis only.
 We acknowledge funding by Deutsche Forschungsgemeinschaft as part of the [Forschergruppe GPSRS](http://gpsrs.de).
 
 We are grateful to Daniel Hug, Günther Last, Klaus Mecke and Gerd Schröder-Turk for guidance and support,
-to Michael Klatt for many discussions and suggestions, and to Simon Weis for technical advice.
+to Michael Klatt for many discussions and for his contributions to the scientific concept and content of the
+Morphometer, and to Simon Weis for technical advice.
 
 We use [picopng](https://lodev.org/lodepng/) for loading PNG images,
 [emscripten](https://emscripten.org/) for compiling to JavaScript,
