@@ -62,9 +62,10 @@ objects bounded by polygonal contours, collections of points (point patterns)
 and greyscale pixel data.
 
 This library is accompanied by example programs and
-bindings for Matlab and the Python language.
+bindings for Python, Matlab, and the JavaScript language.
 We also present the [Morphometer](https://morphometry.org/morphometer/), an
-interactive online resource for analyzing two-dimensional structures.
+interactive online resource for analyzing two-dimensional structures which uses papaya2
+for computations.
 
 `Papaya2` is a rewrite of [`papaya`](https://github.com/skapfer/papaya) with a
 library interface, support for irreducible Minkowski Tensors and interpolated marching squares, and
@@ -82,7 +83,7 @@ and 2D image input data.
 We bundle several example programs which can be adapted to user requirements,
 or employed directly for simple analyses (see section *Command-line tools*).
 
-The main components of the library are defined in the header file `papaya2/papaya2.hpp`.
+The main components of the library are defined in the header file `<papaya2.hpp>`.
 Analysis results are returned in a `MinkowskiAccumulator` object, which offers
 accessors to retrieve common morphometric data, including the following:
 
@@ -149,17 +150,12 @@ the complete image or a region of interest, see \autoref{fig:morpho-image-mode}.
 
 # Command-line tools and bindings
 
-Bundled with the C++ library, we provide a number of example programs which use the library
+In the directory `demos`, we provide a number of example programs which use the library
 for data analysis.  These are meant to be modified and adapted to user needs as required.
 For simple analyses, they can be used directly, see the
 [documentation](https://morphometry.org/software/papaya2/).
-The example programs can be built by typing `make`.
 
-We also provide bindings of the library for Matlab and Python.
-For Matlab, example scripts are contained in `ppanalysis.m` and `imganalysis.m` in the `matlab`
-directory.
-The Python module can be built by typing `make pypaya2`.  It currently has support for the
-point pattern analysis only.
+We also provide bindings of the library for Python, Matlab and JavaScript.
 
 # Acknowledgements
 
