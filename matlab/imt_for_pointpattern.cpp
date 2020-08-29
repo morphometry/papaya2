@@ -30,7 +30,7 @@
 // col8: q5
 // col9: q6
 
-#include "../voronoi.hpp"
+#include <papaya2.hpp/voronoi.hpp>
 #include <gmpxx.h>
 #include <mex.hpp>
 #include <mexAdapter.hpp>

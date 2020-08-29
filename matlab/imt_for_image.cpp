@@ -20,7 +20,7 @@
 // col7: arg(psi_3) ...
 // col17: arg(psi_8)
 
-#include "../papaya2.hpp"
+#include <papaya2.hpp>
 #include <iostream>
 #include <mex.hpp>
 #include <mexAdapter.hpp>
