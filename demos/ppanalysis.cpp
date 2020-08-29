@@ -8,7 +8,7 @@
 #ifndef HAVE_CGAL
 #error ppanalysis requiresm the CGAL library to work.  (Set CGAL_SUPPORT = 1.)
 #endif
-#include "voronoi.hpp"
+#include <papaya2/voronoi.hpp>
 using namespace papaya2;
 using papaya2::VoronoiDiagram;
 using point_t = VoronoiDiagram::point_t;

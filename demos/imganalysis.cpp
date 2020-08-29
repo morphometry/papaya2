@@ -3,11 +3,11 @@
 // using the preliminary Papaya2 library.
 // this program considers only the red color channel.
 // 2019 Sebastian Kapfer <sebastian.kapfer@fau.de>
-#include "papaya2.hpp"
+#include <papaya2.hpp>
 #include "readarg.hpp"
 
 // pull in loading of PNG image files.
-#include "pingfile.hpp"
+#include <papaya2/pingfile.hpp>
 
 using namespace papaya2;
 

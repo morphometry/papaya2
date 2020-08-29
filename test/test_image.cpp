@@ -1,6 +1,6 @@
 #include "catch.hpp"
-#include "papaya2.hpp"
-#include "pingfile.hpp"
+#include <papaya2.hpp>
+#include <papaya2/pingfile.hpp>
 #include "test_helpers.hpp"
 
 using namespace papaya2;

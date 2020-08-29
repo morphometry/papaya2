@@ -9,10 +9,5 @@ features.mk
 perf.data*
 TRASH
 
-sersic
-runtests
-banana
-ppanalysis
-imganalysis
-pypaya2.so
+python/pypaya2.so
 matlab/*.mex*

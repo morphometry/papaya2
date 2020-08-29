@@ -2,10 +2,10 @@
 // we're not using Boost::Python here as we export very few
 // functions and Boost::Python::Numpy is not in Debian.
 // 2019 Sebastian Kapfer <sebastian.kapfer@fau.de>
-#include "papaya2.hpp"
+#include <papaya2.hpp>
 #ifdef HAVE_CGAL
 // without CGAL, there is no Voronoi.
-#include "voronoi.hpp"
+#include <papaya2/voronoi.hpp>
 #endif
 #define PY_SSIZE_T_CLEAN
 #include "python.hpp"
