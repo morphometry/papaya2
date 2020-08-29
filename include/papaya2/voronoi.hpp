@@ -7,7 +7,7 @@
 // 2019 Fabian Schaller <physik@fabian-schaller.de>
 // FIXME this does not have tests yet
 
-#include "papaya2.hpp"
+#include <papaya2.hpp>
 #include <CGAL/Delaunay_triangulation_2.h>
 #include <CGAL/Delaunay_triangulation_adaptation_policies_2.h>
 #include <CGAL/Delaunay_triangulation_adaptation_traits_2.h>

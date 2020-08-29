@@ -1,5 +1,5 @@
 #include "catch.hpp"
-#include "tools.hpp"
+#include <papaya2/tools.hpp>
 
 using namespace papaya2;
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vector.hpp"
+#include <papaya2/vector.hpp>
 #include <array>
 #include <cmath>
 #include <complex>

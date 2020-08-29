@@ -1,5 +1,5 @@
 #include "catch.hpp"
-#include "papaya2.hpp"
+#include <papaya2.hpp>
 #include "test_helpers.hpp"
 #include <sstream>
 
