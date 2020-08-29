@@ -1,7 +1,7 @@
 # Usage
 
 Install the header files for Python 3 and numpy.
-(On Debian-based systems: `apt get install python3-dev python3-numpy`.)
+(On Debian-based systems: `apt-get install python3-dev python3-numpy`.)
 
 To compile type `make`.
 
