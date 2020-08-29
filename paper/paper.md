@@ -8,6 +8,7 @@ tags:
   - C++
   - Python
   - Matlab
+  - JavaScript
 authors:
   - name: Fabian M. Schaller
     orcid: 0000-0003-2609-9988
@@ -69,7 +70,7 @@ for computations.
 
 `Papaya2` is a rewrite of [`papaya`](https://github.com/skapfer/papaya) with a
 library interface, support for irreducible Minkowski Tensors and interpolated marching squares, and
-extensions to Matlab and Python provided.  While the tensor of inertia is computed
+extensions to Matlab, JavaScript and Python provided.  While the tensor of inertia is computed
 by many tools, we are not aware of other open-source software which provides
 higher-rank shape characterization in 2D.
 
@@ -123,7 +124,7 @@ the [CGAL](https://cgal.org/) library is required.
 
 # Application: Morphometer
 
-We use the `papaya2` library in our interactive analysis tool [Morphometer](https://morphometry.org/morphometer/).
+We use `papaya2.js`, the JavaScript version of the `papaya2` library in our interactive analysis tool [Morphometer](https://morphometry.org/morphometer/).
 It provides rapid analysis of small amounts of data (up to 500 points, or 500x500 pixels).
 For routine analysis we recommend using the command-line tools or Python/Matlab bindings.
 
