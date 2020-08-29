@@ -1,6 +1,8 @@
 # defaults
 CXXFLAGS += -g -O3
 CXXFLAGS += -Wall -Werror
+# compile pypaya2 for Python 3
+PYTHON_3 = 1
 # enable CGAL support for Voronoi diagrams (in ppanalysis and in pypaya2)
 CGAL_SUPPORT = 1
 CGAL_LDFLAGS = -lCGAL -LCGAL_Core -lgmp
@@ -18,6 +20,14 @@ ifeq ($(CGAL_SUPPORT), 1)
 endif
 
 CXXFLAGS += -std=c++11 -fPIC
+
+ifeq ($(PYTHON_3), 1)
+    PYPAYA_CXXFLAGS += -DPYTHON_3
+    PYPAYA_CXXFLAGS += `python3-config --includes`
+    PYPAYA_CXXFLAGS += -I/usr/lib/python3/dist-packages/numpy/core/include
+else
+    PYPAYA_CXXFLAGS += `python-config --includes`
+endif
 
 MAKEFILES = \
     Makefile \
@@ -78,7 +88,7 @@ pypaya2.$(SO_EXTENSION): pypaya2.o
 
 # special rule, needs Python headers
 pypaya2.o: pypaya2.cpp
-	$(CXX) $(CXXFLAGS) `python-config --includes` -c -o $@ $<
+	$(CXX) $(CXXFLAGS) $(PYPAYA_CXXFLAGS) -c -o $@ $<
 
 test: runtests
 	./runtests

@@ -7,6 +7,7 @@
 // without CGAL, there is no Voronoi.
 #include "voronoi.hpp"
 #endif
+#define PY_SSIZE_T_CLEAN
 #include "python.hpp"
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
@@ -227,10 +228,26 @@ extern "C"
         {nullptr, nullptr, 0, nullptr} // sentinel
     };
 
+#ifdef PYTHON_3
+    static PyModuleDef module_def = {
+        PyModuleDef_HEAD_INIT,
+        "pypaya2",
+        nullptr, // module docs
+        -1,
+        mymethods
+    };
+
+    PyMODINIT_FUNC PyInit_pypaya2()
+    {
+        import_array();
+        return PyModule_Create(&module_def);
+    }
+#else // Python 2
     void initpypaya2()
     {
         (void)Py_InitModule("pypaya2", mymethods);
         import_array();
     }
+#endif
 
 } // extern "C"
