@@ -82,11 +82,12 @@ extern "C"
         if (PyArray_NDIM(arr_vertices) == 2) {
             npy_intp *dimensions = PyArray_DIMS(arr_vertices);
             N = dimensions[0];
-            if (dimensions[1] == 2) {
-                // OK
-            } else {
+            if (dimensions[1] != 2) {
                 (void)PyErr_Format(PyExc_ValueError, "data must be 2D, is %i",
                                    (int)dimensions[1]);
+                return nullptr;
+            } else if (N < 2) {
+                (void)PyErr_Format(PyExc_ValueError, "polygon must contain at least two vertices");
                 return nullptr;
             }
         } else {
