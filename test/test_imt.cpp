@@ -89,16 +89,32 @@ TEST_CASE("MinkowskiAccumulator struct")
         CHECK(imt.msm(4) > .99);
     }
 
-    SECTION("imt_polygon")
+    SECTION("imt_polyon with concave polygon")
     {
+        auto const vertices = std::vector<vec_t>{
+            {2., 3.}, {.25, .5}, {-3., 4.}, {-2., 0.}, {2., 0.}};
+        auto const expected_area = 67. / 8;
+        auto const expected_imt = std::vector<complex_t>{
+            complex_t(18.9509878231867863325879476083, 0.),
+            complex_t(0., 0.),
+            complex_t(4.03586622195516544754949115540, 3.83613097404496685735871370308),
+            complex_t(-2.25242470620683687651763840592, 7.91410261263648605530287871331),
+            complex_t(2.23638454508277526919840618339, 2.16586100869600377036856029938),
+            complex_t(0.70071569649771790984433739720, -10.30885074737037023789259031490),
+            complex_t(-4.28085548650291806830723860758, 0.96683279082320198340559106474)
+        };
+
         SECTION("concave polygon")
         {
-            auto const vertices = std::vector<vec_t>{
-                {2., 3.}, {0., 0.}, {-2., 3.}, {-2., 0.}, {2., 0.}};
             auto imt = imt_polygon(vertices);
-            CHECK(imt.area() == approx(6.));
+            CHECK(imt.area() == approx(expected_area));
+            for (int s : {0, 2, 3, 4, 5, 6})
+                CHECK(imt.imt(s) == approx(expected_imt[s]));
         }
+    }
 
+    SECTION("imt_polygon with equilateral triangle")
+    {
         SECTION("equilateral triangle")
         {
             vec_t const v0 = {1., 0.}, v1 = cos_sin(TWO_PI / 3),
