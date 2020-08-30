@@ -108,8 +108,7 @@ TEST_CASE("MinkowskiAccumulator struct")
         {
             const size_t N = vertices.size();
             std::vector<vec_t> relabelled_vertices(N);
-            for (size_t r = 0; r != N; ++r)
-            {
+            for (size_t r = 0; r != N; ++r) {
                 for (size_t i = 0; i != N; ++i)
                     relabelled_vertices.at((i + r) % N) = vertices.at(i);
 
@@ -124,8 +123,7 @@ TEST_CASE("MinkowskiAccumulator struct")
         {
             const size_t N = vertices.size();
             std::vector<vec_t> relabelled_vertices(N + 1);
-            for (size_t r = 0; r != N; ++r)
-            {
+            for (size_t r = 0; r != N; ++r) {
                 size_t i = 0;
                 for (; i != r; ++i)
                     relabelled_vertices.at(i) = vertices.at(i);
