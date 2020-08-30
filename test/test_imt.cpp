@@ -119,6 +119,26 @@ TEST_CASE("MinkowskiAccumulator struct")
                     CHECK(imt.imt(s) == approx(expected_imt[s]));
             }
         }
+
+        SECTION("concave polygon, zero-length edges")
+        {
+            const size_t N = vertices.size();
+            std::vector<vec_t> relabelled_vertices(N + 1);
+            for (size_t r = 0; r != N; ++r)
+            {
+                size_t i = 0;
+                for (; i != r; ++i)
+                    relabelled_vertices.at(i) = vertices.at(i);
+                relabelled_vertices.at(i) = vertices.at(r);
+                for (; i != N; ++i)
+                    relabelled_vertices.at(i + 1) = vertices.at(i);
+
+                auto imt = imt_polygon(relabelled_vertices);
+                CHECK(imt.area() == approx(expected_area));
+                for (int s : {0, 2, 3, 4, 5, 6})
+                    CHECK(imt.imt(s) == approx(expected_imt[s]));
+            }
+        }
     }
 
     SECTION("imt_polygon with equilateral triangle")
