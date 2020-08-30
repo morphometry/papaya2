@@ -104,12 +104,20 @@ TEST_CASE("MinkowskiAccumulator struct")
             complex_t(-4.28085548650291806830723860758, 0.96683279082320198340559106474)
         };
 
-        SECTION("concave polygon")
+        SECTION("concave polygon, relabel vertices")
         {
-            auto imt = imt_polygon(vertices);
-            CHECK(imt.area() == approx(expected_area));
-            for (int s : {0, 2, 3, 4, 5, 6})
-                CHECK(imt.imt(s) == approx(expected_imt[s]));
+            const size_t N = vertices.size();
+            std::vector<vec_t> relabelled_vertices(N);
+            for (size_t r = 0; r != N; ++r)
+            {
+                for (size_t i = 0; i != N; ++i)
+                    relabelled_vertices.at((i + r) % N) = vertices.at(i);
+
+                auto imt = imt_polygon(relabelled_vertices);
+                CHECK(imt.area() == approx(expected_area));
+                for (int s : {0, 2, 3, 4, 5, 6})
+                    CHECK(imt.imt(s) == approx(expected_imt[s]));
+            }
         }
     }
 
