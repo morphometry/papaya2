@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Python.h>
+#include <memory>
 #include <string>
 
 namespace papaya2 {

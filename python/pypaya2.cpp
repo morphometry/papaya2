@@ -15,7 +15,6 @@
 using namespace papaya2;
 using namespace papaya2::python;
 
-#ifdef HAVE_CGAL
 static void np_set_double(UniquePyPtr &obj, int i, double value)
 {
     auto arr = obj.reinterpret<PyArrayObject>();
@@ -28,11 +27,13 @@ static void np_set_complex(UniquePyPtr &obj, int i, complex_t value)
     *reinterpret_cast<complex_t *>(PyArray_GETPTR1(arr, i)) = value;
 }
 
+#ifdef HAVE_CGAL
 static double np_get_double(UniquePyPtr &obj, int i)
 {
     auto arr = obj.reinterpret<PyArrayObject>();
     return *reinterpret_cast<double const *>(PyArray_GETPTR1(arr, i));
 }
+#endif // HAVE_CGAL
 
 static double np_get_double(UniquePyPtr &obj, int i, int j)
 {
@@ -55,12 +56,89 @@ static UniquePyPtr np_make_new_vector(int N, int datatype)
     return ret;
 }
 
-#endif // HAVE_CGAL
-
 static int const MAX_S = MinkowskiAccumulator::MAX_S;
 
 extern "C"
 {
+    static PyObject *wrap_imt_for_polygon(PyObject *, PyObject *args, PyObject *)
+    {
+        UniquePyPtr ref_vertices = nullptr;
+        PyArrayObject *arr_vertices = nullptr;
+        size_t N;
+
+        {
+            PyObject *arg1 = nullptr;
+            if (!PyArg_ParseTuple(args, "O", &arg1, nullptr))
+                return nullptr;
+            ref_vertices = UniquePyPtr(
+                PyArray_FROM_OTF(arg1, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY));
+            if (!ref_vertices)
+                return nullptr;
+        }
+
+        arr_vertices = ref_vertices.reinterpret<PyArrayObject>();
+
+        // make sure input has the correct dimensions
+        if (PyArray_NDIM(arr_vertices) == 2) {
+            npy_intp *dimensions = PyArray_DIMS(arr_vertices);
+            N = dimensions[0];
+            if (dimensions[1] == 2) {
+                // OK
+            } else {
+                (void)PyErr_Format(PyExc_ValueError, "data must be 2D, is %i",
+                                   (int)dimensions[1]);
+                return nullptr;
+            }
+        } else {
+            // PyErr_Format always returns 0 by documentation
+            (void)PyErr_Format(PyExc_ValueError,
+                               "# dimensions must be 2, is %i",
+                               (int)PyArray_NDIM(arr_vertices));
+            return nullptr;
+        }
+
+        std::vector<vec_t> vertices;
+        vertices.reserve(N);
+
+        for (size_t i = 0; i != N; ++i) {
+            vertices.push_back({np_get_double(ref_vertices, i, 0),
+                                np_get_double(ref_vertices, i, 1)});
+        }
+
+        // get output arrays
+        auto ref_area_data = np_make_new_vector(1, NPY_DOUBLE);
+        auto ref_peri_data = np_make_new_vector(1, NPY_DOUBLE);
+        auto ref_msm_data = std::vector<UniquePyPtr>(MAX_S + 1);
+        auto ref_imt_data = std::vector<UniquePyPtr>(MAX_S + 1);
+        for (int s = 2; s <= MAX_S; ++s) {
+            ref_msm_data[s] = np_make_new_vector(1, NPY_DOUBLE);
+            ref_imt_data[s] = np_make_new_vector(1, NPY_CDOUBLE);
+        }
+
+        // compute IMT
+        auto minkval = papaya2::imt_polygon(vertices);
+        np_set_double(ref_area_data, 0, minkval.area());
+        np_set_double(ref_peri_data, 0, minkval.perimeter());
+        for (int s = 2; s <= MAX_S; ++s) {
+            np_set_double(ref_msm_data[s], 0, minkval.msm(s));
+            np_set_complex(ref_imt_data[s], 0, minkval.imt(s));
+        }
+
+        // allocate the return dict and populate it
+        auto ref_return_dict = UniquePyPtr(PyDict_New());
+        auto move_item_to_dict = [&](string const &name, UniquePyPtr &ref) {
+            (void)PyDict_SetItemString(ref_return_dict.get(), name.c_str(),
+                                       ref.release());
+        };
+        move_item_to_dict("area", ref_area_data);
+        move_item_to_dict("perimeter", ref_peri_data);
+        for (int s = 2; s <= MAX_S; ++s) {
+            move_item_to_dict("q" + std::to_string(s), ref_msm_data[s]);
+            move_item_to_dict("psi" + std::to_string(s), ref_imt_data[s]);
+        }
+
+        return ref_return_dict.release();
+    }
 
 #ifdef HAVE_CGAL
     static PyObject *wrap_imt_for_pointpattern(PyObject *, PyObject *args,
@@ -211,6 +289,12 @@ extern "C"
 #endif // HAVE_CGAL
 
     static PyMethodDef mymethods[] = {
+        {"imt_for_polygon", (PyCFunction)wrap_imt_for_polygon,
+         METH_VARARGS,
+         "imt_for_polygon(vertices)\n"
+         "compute the Minkowski of the polygon bounded by the vertices. "
+         "Vertices are assumed to be in counterclockwise order.\n"
+         "Returns a dictionary mapping each metric to its value.\n"},
 #ifdef HAVE_CGAL
         {"imt_for_pointpattern", (PyCFunction)wrap_imt_for_pointpattern,
          METH_VARARGS | METH_KEYWORDS,
