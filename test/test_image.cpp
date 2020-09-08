@@ -166,8 +166,8 @@ TEST_CASE("marching squares algorithm")
             auto i_imt = imt_interpolated_marching_squares(ph, 0.);
             auto b_imt =
                 imt_interpolated_marching_squares(ph, 0., ANALYZE_BLACK);
-            CHECK(i_imt.imt(3) == -b_imt.imt(3));
-            CHECK(i_imt.imt(0) == b_imt.imt(0));
+            CHECK(i_imt.imt(3) == approx(-b_imt.imt(3)));
+            CHECK(i_imt.imt(0) == approx(b_imt.imt(0)));
         }
         SECTION("config #12, connect black")
         {
@@ -175,8 +175,8 @@ TEST_CASE("marching squares algorithm")
                 imt_interpolated_marching_squares(ph, 0., CONNECT_BLACK);
             auto b_imt = imt_interpolated_marching_squares(
                 ph, 0., ANALYZE_BLACK | CONNECT_BLACK);
-            CHECK(i_imt.imt(3) == -b_imt.imt(3));
-            CHECK(i_imt.imt(0) == b_imt.imt(0));
+            CHECK(i_imt.imt(3) == approx(-b_imt.imt(3)));
+            CHECK(i_imt.imt(0) == approx(b_imt.imt(0)));
         }
         ph(0, 1) = 0.7;
         ph(1, 1) = -1.3;
@@ -187,8 +187,8 @@ TEST_CASE("marching squares algorithm")
             auto i_imt = imt_interpolated_marching_squares(ph, 0.);
             auto b_imt =
                 imt_interpolated_marching_squares(ph, 0., ANALYZE_BLACK);
-            CHECK(i_imt.imt(3) == -b_imt.imt(3));
-            CHECK(i_imt.imt(0) == b_imt.imt(0));
+            CHECK(i_imt.imt(3) == approx(-b_imt.imt(3)));
+            CHECK(i_imt.imt(0) == approx(b_imt.imt(0)));
         }
         SECTION("critical config #6, connect white")
         {
@@ -196,8 +196,8 @@ TEST_CASE("marching squares algorithm")
                 imt_interpolated_marching_squares(ph, 0., CONNECT_BLACK);
             auto b_imt = imt_interpolated_marching_squares(
                 ph, 0., ANALYZE_BLACK | CONNECT_BLACK);
-            CHECK(i_imt.imt(3) == -b_imt.imt(3));
-            CHECK(i_imt.imt(0) == b_imt.imt(0));
+            CHECK(i_imt.imt(3) == approx(-b_imt.imt(3)));
+            CHECK(i_imt.imt(0) == approx(b_imt.imt(0)));
         }
         ph(0, 1) = -0.7;
         ph(1, 1) = 1.3;
@@ -208,8 +208,8 @@ TEST_CASE("marching squares algorithm")
             auto i_imt = imt_interpolated_marching_squares(ph, 0.);
             auto b_imt =
                 imt_interpolated_marching_squares(ph, 0., ANALYZE_BLACK);
-            CHECK(i_imt.imt(3) == -b_imt.imt(3));
-            CHECK(i_imt.imt(0) == b_imt.imt(0));
+            CHECK(i_imt.imt(3) == approx(-b_imt.imt(3)));
+            CHECK(i_imt.imt(0) == approx(b_imt.imt(0)));
         }
         SECTION("critical config #9, connect white")
         {
@@ -217,8 +217,8 @@ TEST_CASE("marching squares algorithm")
                 imt_interpolated_marching_squares(ph, 0., CONNECT_BLACK);
             auto b_imt = imt_interpolated_marching_squares(
                 ph, 0., ANALYZE_BLACK | CONNECT_BLACK);
-            CHECK(i_imt.imt(3) == -b_imt.imt(3));
-            CHECK(i_imt.imt(0) == b_imt.imt(0));
+            CHECK(i_imt.imt(3) == approx(-b_imt.imt(3)));
+            CHECK(i_imt.imt(0) == approx(b_imt.imt(0)));
         }
     }
     SECTION("a single pixel")
