@@ -1,0 +1,5 @@
+#!/bin/sh -e
+cd test
+make -j CXX=$1
+./runtests
+make clean
