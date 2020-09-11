@@ -135,12 +135,13 @@ Morphometer provides several advanced analysis modes:
 - Single polygon mode: \autoref{fig:morpho-ui} shows the user interface of Morphometer when analyzing a single polygon (left-hand side).
 On the right-hand side, the Minkowski structure metrics of the polygon are displayed.
 
-![Minkowski Tensor analysis of a Poisson point pattern.\label{fig:morpho-pp-mode}](morphometer-pp-analysis.png)
+![Minkowski Tensor analysis of a Poisson point pattern.\label{fig:morpho-pp-mode}](morphometer-granular-cryst-cluster.png)
 
 - Point pattern analysis mode can be used to analyze abstract point patterns and data of physical particle systems.
 For the analysis, a Voronoi tessellation of the points is constructed and Minkowski Tensors of the individual
 Voronoi cells are computed.  Morphometer provides histograms and basic statistics of the morphometric data,
-see \autoref{fig:morpho-pp-mode}.
+see \autoref{fig:morpho-pp-mode}. The example show the analysis of a granular crystal cluster. The Minkowski
+structure metric $q_6$ is very well suited to detect hexagonal crystalline structures.
 
 ![Minkowski Tensor analysis of a greyscale image: a Gaussian random field.\label{fig:morpho-image-mode}](morphometer-image-analysis.png)
 
