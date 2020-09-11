@@ -15,12 +15,10 @@ else
     PYTHON_CXXFLAGS += `python-config --includes`
 endif
 
-include ../cgal.mk
-
 # override defaults here
 -include features.mk
 
-CXXFLAGS += -I../include $(PYTHON_CXXFLAGS) $(CGAL_CXXFLAGS)
+CXXFLAGS += -I../include $(PYTHON_CXXFLAGS)
 LDFLAGS += $(PYTHON_LDFLAGS) $(CGAL_LDFLAGS)
 
 PRODUCTS = \
@@ -29,6 +27,7 @@ PRODUCTS = \
 default: .ts.mk.hpp pypaya2.$(SO_EXTENSION)
 
 include ../config/shared.mk
+include ../config/detect-cgal.mk
 
 pypaya2: pypaya2.$(SO_EXTENSION)
 	@true

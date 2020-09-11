@@ -3,6 +3,7 @@ features.mk
 .gdb_history
 .clang-format
 .ts.mk.hpp
+.cgal.mk
 *.o
 *.sw[op]
 *.dSYM
