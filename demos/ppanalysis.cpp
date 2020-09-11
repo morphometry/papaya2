@@ -6,7 +6,7 @@
 // FIXME this does not have tests yet
 #include "common.hpp"
 #ifndef HAVE_CGAL
-#error ppanalysis requiresm the CGAL library to work.  (Set CGAL_SUPPORT = 1.)
+#error ppanalysis requires the CGAL library to work.  Please install it, see https://github.com/morphometry/papaya2/blob/master/demos/README.md
 #endif
 #include <papaya2/voronoi.hpp>
 using namespace papaya2;

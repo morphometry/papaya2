@@ -36,3 +36,11 @@ You will need `python2-dev` and `python-numpy` packages.
 
 Run `python3 test.py`.
 
+## Common errors
+
+If you get the error message
+
+    Could not find the numpy C headers. Is the numpy Python module installed properly?
+
+You do not have `numpy` installed.  On Debian-based systems: `sudo apt-get install python3-dev python3-numpy`.
+On Macintosh with Homebrew: `brew install numpy`.  On Macintosh with Conda: `conda install -c anaconda numpy`.
