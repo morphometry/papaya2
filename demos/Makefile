@@ -9,10 +9,7 @@ include ../cgal.mk
 # modify defaults here if necessary
 -include features.mk
 
-MAKEFILES = \
-    Makefile \
-
-BINARIES = \
+PRODUCTS = \
     banana \
     sersic \
     imganalysis \
@@ -20,20 +17,9 @@ BINARIES = \
 
 default: .ts.mk.hpp imganalysis ppanalysis
 
+include ../config/shared.mk
+
 all: default banana sersic
-
-# hack to make any code recompile if Makefile changes
-.ts.mk.hpp: $(MAKEFILES)
-	@touch $@
-
-# automagic dependencies
-depend: *.cpp *.hpp .ts.mk.hpp
-	$(CXX) $(CXXFLAGS) -MM *.cpp >.depend
--include .depend
-
-# create features.mk if absent
-features.mk:
-	@touch $@
 
 imganalysis: imganalysis.o
 	$(CXX) $(CXXFLAGS) -o $@ $< $(LDFLAGS)
@@ -50,8 +36,3 @@ ppanalysis.o: ppanalysis.cpp
 
 sersic: sersic.o
 	$(CXX) $(CXXFLAGS) -o $@ $< $(LDFLAGS)
-
-clean:
-	rm -f $(BINARIES) *.o .ts.mk.hpp
-
-.PHONY: default all clean depend

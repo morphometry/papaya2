@@ -23,35 +23,15 @@ include ../cgal.mk
 CXXFLAGS += -I../include $(PYTHON_CXXFLAGS) $(CGAL_CXXFLAGS)
 LDFLAGS += $(PYTHON_LDFLAGS) $(CGAL_LDFLAGS)
 
-MAKEFILES = \
-    Makefile \
-    features.mk \
-
-BINARIES = \
+PRODUCTS = \
     pypaya2.$(SO_EXTENSION) \
 
 default: .ts.mk.hpp pypaya2.$(SO_EXTENSION)
 
-# hack to make any code recompile if Makefile changes
-.ts.mk.hpp: $(MAKEFILES)
-	@touch $@
-
-# automagic dependencies
-depend: *.cpp *.hpp .ts.mk.hpp
-	$(CXX) $(CXXFLAGS) -MM *.cpp >.depend
--include .depend
-
-# create features.mk if absent
-features.mk:
-	@touch $@
+include ../config/shared.mk
 
 pypaya2: pypaya2.$(SO_EXTENSION)
 	@true
 
 pypaya2.$(SO_EXTENSION): pypaya2.o
 	$(CXX) $(CXXFLAGS) -shared -o $@ $< $(LDFLAGS)
-
-clean:
-	rm -f $(BINARIES) *.o .ts.mk.hpp
-
-.PHONY: default clean depend
