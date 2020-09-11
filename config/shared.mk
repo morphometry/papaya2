@@ -7,7 +7,7 @@ features.mk:
 	@touch $@
 
 clean:
-	rm -f $(PRODUCTS) *.o .ts.mk.hpp .depend.mk
+	rm -f $(PRODUCTS) *.o .depend.mk
 
 # hack to make any code recompile if Makefile changes
 .ts.mk.hpp: $(MAKEFILES)

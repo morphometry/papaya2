@@ -1,4 +1,3 @@
-# defaults
 CXXFLAGS += -g -O3 -std=c++11
 CXXFLAGS += -Wall -Werror
 CXXFLAGS += -I../include
@@ -19,7 +18,7 @@ default: all
 
 include ../config/shared.mk
 
-all: .ts.mk.hpp runtests
+all: runtests
 
 runtests: $(TEST_OBJECTS) runtests.o
 	$(CXX) $(CXXFLAGS) -o $@ $(TEST_OBJECTS) runtests.o $(LDFLAGS)

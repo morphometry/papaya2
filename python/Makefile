@@ -24,10 +24,12 @@ LDFLAGS += $(PYTHON_LDFLAGS) $(CGAL_LDFLAGS)
 PRODUCTS = \
     pypaya2.$(SO_EXTENSION) \
 
-default: .ts.mk.hpp pypaya2.$(SO_EXTENSION)
+default: pypaya2
 
 include ../config/shared.mk
 include ../config/detect-cgal.mk
+
+all: pypaya2
 
 pypaya2: pypaya2.$(SO_EXTENSION)
 	@true

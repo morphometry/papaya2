@@ -13,7 +13,7 @@ PRODUCTS = \
     imganalysis \
     ppanalysis \
 
-default: .ts.mk.hpp imganalysis ppanalysis
+default: imganalysis ppanalysis
 
 include ../config/shared.mk
 include ../config/detect-cgal.mk
