@@ -65,5 +65,15 @@ TEST_CASE("integer range container", "[range]")
         auto r = range(4);
         v.assign(r.begin(), r.end());
         CHECK(v == intvec_t({0, 1, 2, 3}));
+        auto e = r.end();
+        CHECK(*--e == 3);
+        CHECK(*e == 3);
+        CHECK(*e-- == 3);
+        CHECK(*e == 2);
+        CHECK(*e++ == 2);
+        CHECK(*e == 3);
+        CHECK(*--e == 2);
+        CHECK(*e == 2);
+        CHECK(*++e == 3);
     }
 }

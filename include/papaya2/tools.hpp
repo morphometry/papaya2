@@ -63,7 +63,7 @@ struct IntegerRange
         using difference_type = int;
         using value_type = int;
         using pointer = void;
-        using reference = void;
+        using reference = int;
         using iterator_category = std::bidirectional_iterator_tag;
 
         iterator() : x_(42) {}
@@ -77,10 +77,29 @@ struct IntegerRange
             return *this;
         }
 
+        iterator operator++(int)
+        {
+            iterator x = *this;
+            ++*this;
+            return x;
+        }
+
         iterator &operator--()
         {
             --x_;
             return *this;
+        }
+
+        iterator operator--(int)
+        {
+            iterator x = *this;
+            --*this;
+            return x;
+        }
+
+        friend bool operator==(const iterator &lhs, const iterator &rhs)
+        {
+            return lhs.x_ == rhs.x_;
         }
 
         friend bool operator!=(const iterator &lhs, const iterator &rhs)
