@@ -4,7 +4,7 @@
 // 2019 Sebastian Kapfer <sebastian.kapfer@fau.de>
 // 2019 Fabian Schaller <physik@fabian-schaller.de>
 // FIXME this does not have tests yet
-#include "readarg.hpp"
+#include "common.hpp"
 #ifndef HAVE_CGAL
 #error ppanalysis requiresm the CGAL library to work.  (Set CGAL_SUPPORT = 1.)
 #endif

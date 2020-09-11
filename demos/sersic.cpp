@@ -3,8 +3,7 @@
 // using the preliminary Papaya2 library.
 // 2018 Sebastian Kapfer <sebastian.kapfer@fau.de>
 #include "sersic.hpp"
-#include "papaya2.hpp"
-#include "readarg.hpp"
+#include "common.hpp"
 
 using namespace papaya2;
 
