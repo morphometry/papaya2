@@ -15,8 +15,7 @@ jobs:
     - name: Compile python3 module without CGAL
       run: |
         cd python
-        make
-        make non_cgal_test
+        make non_cgal_test clean
     - name: Compile and run test suite with clang 10
       run: test/with clang++-10
     - name: Compile and run test suite with clang 7
@@ -24,14 +23,18 @@ jobs:
     - name: Compile and run test suite with GCC 4.8
       run: test/with g++-4.8
     - name: Compile demos without libraries
-      run: cd demos; make -j imganalysis sersic && make clean
+      run: |
+        cd demos
+        make -j imganalysis sersic
+        make clean
     - name: Install CGAL and FITS
       run: sudo apt-get install libcgal-dev libccfits-dev
     - name: Compile demos with libraries
-      run: cd demos; make -j imganalysis sersic ppanalysis banana && make clean
+      run: |
+        cd demos
+        make -j imganalysis sersic ppanalysis banana
+        make clean
     - name: Compile python3 module with CGAL
       run: |
         cd python
-        make clean
-        make
-        make test
+        make test clean

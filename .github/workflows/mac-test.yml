@@ -26,10 +26,12 @@ jobs:
     - name: Compile python3 module without CGAL
       run: |
         cd python
-        make
-        make non_cgal_test
+        make non_cgal_test clean
     - name: Compile demos without libraries
-      run: cd demos; make -j imganalysis sersic && make clean
+      run: |
+        cd demos
+        make -j imganalysis sersic
+        make clean
     - name: Download Boost and CGAL
       run: |
         curl -L https://dl.bintray.com/boostorg/release/1.74.0/source/boost_1_74_0.tar.bz2 | tar xj
@@ -43,7 +45,5 @@ jobs:
     - name: Compile python3 module with CGAL
       run: |
         cd python
-        make clean
         cp ../demos/features.mk .
-        make
-        make test
+        make test clean
