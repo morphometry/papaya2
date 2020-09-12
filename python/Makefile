@@ -10,9 +10,10 @@ PYTHON_VERSION = 3
 ifeq ($(PYTHON_VERSION), 3)
     PYTHON_CXXFLAGS += -DPYTHON_3
     PYTHON_CXXFLAGS += `python3-config --includes`
-    PYTHON_CXXFLAGS += -I/usr/lib/python3/dist-packages/numpy/core/include
+    PYTHON_CXXFLAGS += `python3 ../config/detect-numpy.py`
 else
     PYTHON_CXXFLAGS += `python-config --includes`
+    PYTHON_CXXFLAGS += `python ../config/detect-numpy.py`
 endif
 
 # override defaults here
