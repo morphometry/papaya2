@@ -24,6 +24,12 @@ endif
 CXXFLAGS += -I../include $(PYTHON_CXXFLAGS)
 LDFLAGS += $(PYTHON_LDFLAGS) $(CGAL_LDFLAGS)
 
+DYNLIB_FLAGS = -shared
+ifeq ("$(shell uname)", "Darwin")
+    # unresolved symbols are Python's and will get resolved when loading
+    DYNLIB_FLAGS += -undefined dynamic_lookup
+endif
+
 PRODUCTS = \
     pypaya2.$(SO_EXTENSION) \
 
@@ -38,4 +44,4 @@ pypaya2: pypaya2.$(SO_EXTENSION)
 	@true
 
 pypaya2.$(SO_EXTENSION): pypaya2.o
-	$(CXX) $(CXXFLAGS) -shared -o $@ $< $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) $(DYNLIB_FLAGS) -o $@ $< $(LDFLAGS)
