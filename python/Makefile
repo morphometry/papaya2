@@ -1,5 +1,5 @@
 # defaults
-CXXFLAGS += -g -O3
+CXXFLAGS += -g -O3 -std=c++11
 CXXFLAGS += -Wall -Werror
 CXXFLAGS += -fPIC
 # set to "dll" for Windows
