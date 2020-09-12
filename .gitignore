@@ -1,13 +1,12 @@
 features.mk
-.depend
+.depend.mk
 .gdb_history
 .clang-format
-.ts.mk.hpp
+.cgal.mk
 *.o
 *.sw[op]
 *.dSYM
 perf.data*
 TRASH
 
-python/pypaya2.so
 matlab/*.mex*

@@ -3,8 +3,7 @@
 // using the preliminary Papaya2 library.
 // 2018 Sebastian Kapfer <sebastian.kapfer@fau.de>
 // 2018 Jenny Wagner <j.wagner@uni-heidelberg.de>
-#include "papaya2.hpp"
-#include "readarg.hpp"
+#include "common.hpp"
 #include <CCfits/CCfits>
 #include <valarray>
 

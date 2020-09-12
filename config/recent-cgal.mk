@@ -1,0 +1,2 @@
+CXXFLAGS += -DHAVE_CGAL -std=c++14
+CGAL_LDFLAGS = -lgmp

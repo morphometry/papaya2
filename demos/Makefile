@@ -1,39 +1,24 @@
 # defaults
-CXXFLAGS += -g -O3
+CXXFLAGS += -g -O3 -std=c++11
 CXXFLAGS += -Wall -Werror
 FITS_LDFLAGS = -lCCfits -lcfitsio
 CXXFLAGS += -I../include
 
-include ../cgal.mk
-
 # modify defaults here if necessary
 -include features.mk
 
-MAKEFILES = \
-    Makefile \
-
-BINARIES = \
+PRODUCTS = \
     banana \
     sersic \
     imganalysis \
     ppanalysis \
 
-default: .ts.mk.hpp imganalysis ppanalysis
+default: imganalysis ppanalysis
+
+include ../config/shared.mk
+include ../config/detect-cgal.mk
 
 all: default banana sersic
-
-# hack to make any code recompile if Makefile changes
-.ts.mk.hpp: $(MAKEFILES)
-	@touch $@
-
-# automagic dependencies
-depend: *.cpp *.hpp .ts.mk.hpp
-	$(CXX) $(CXXFLAGS) -MM *.cpp >.depend
--include .depend
-
-# create features.mk if absent
-features.mk:
-	@touch $@
 
 imganalysis: imganalysis.o
 	$(CXX) $(CXXFLAGS) -o $@ $< $(LDFLAGS)
@@ -45,13 +30,5 @@ banana: banana.cpp
 ppanalysis: ppanalysis.o
 	$(CXX) $(CXXFLAGS) -o $@ $< $(LDFLAGS) $(CGAL_LDFLAGS)
 
-ppanalysis.o: ppanalysis.cpp
-	$(CXX) $(CXXFLAGS) $(CGAL_CXXFLAGS) -c -o $@ $<
-
 sersic: sersic.o
 	$(CXX) $(CXXFLAGS) -o $@ $< $(LDFLAGS)
-
-clean:
-	rm -f $(BINARIES) *.o .ts.mk.hpp
-
-.PHONY: default all clean depend

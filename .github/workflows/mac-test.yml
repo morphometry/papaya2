@@ -1,0 +1,49 @@
+name: Papaya2
+
+on: [push]
+
+jobs:
+  mac-test:
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Compile and run test suite with default compiler
+      run: test/with c++
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - name: Versions
+      run: |
+        python3-config --includes
+        python3-config --cflags
+        python3-config --libs
+        python3-config --ldflags
+        c++ --version
+    - name: Install numpy
+      run: pip install numpy
+    - name: Compile python3 module without CGAL
+      run: |
+        cd python
+        make non_cgal_test clean
+    - name: Compile demos without libraries
+      run: |
+        cd demos
+        make -j imganalysis sersic
+        make clean
+    - name: Download Boost and CGAL
+      run: |
+        curl -L https://dl.bintray.com/boostorg/release/1.74.0/source/boost_1_74_0.tar.bz2 | tar xj
+        curl -L https://github.com/CGAL/cgal/releases/download/v5.1/CGAL-5.1.tar.xz | tar xJ
+    - name: Compile demos with CGAL
+      run: |
+        cd demos
+        echo CXXFLAGS += -I../CGAL-5.1/include -I../boost_1_74_0 >features.mk
+        make -j imganalysis sersic ppanalysis
+        make clean
+    - name: Compile python3 module with CGAL
+      run: |
+        cd python
+        cp ../demos/features.mk .
+        make test clean
