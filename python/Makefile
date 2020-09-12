@@ -11,11 +11,13 @@ PYTHON_VERSION = 3
 -include features.mk
 
 ifeq ($(PYTHON_VERSION), 3)
+    PYTHON = python3
     PYTHON_CXXFLAGS += -DPYTHON_3
     PYTHON_CXXFLAGS += `python3-config --includes`
     PYTHON_CXXFLAGS += `python3 ../config/detect-numpy.py`
     PYTHON_LDFLAGS += `python3-config --ldflags`
 else
+    PYTHON = python2
     PYTHON_CXXFLAGS += `python-config --includes`
     PYTHON_CXXFLAGS += `python ../config/detect-numpy.py`
     PYTHON_LDFLAGS += `python-config --ldflags`
@@ -45,3 +47,10 @@ pypaya2: pypaya2.$(SO_EXTENSION)
 
 pypaya2.$(SO_EXTENSION): pypaya2.o
 	$(CXX) $(CXXFLAGS) $(DYNLIB_FLAGS) -o $@ $< $(LDFLAGS)
+
+non_cgal_test: pypaya2
+	cp -f pypaya2.$(SO_EXTENSION) test
+	(cd test; $(PYTHON) poly_test.py)
+
+test: non_cgal_test
+	(cd test; $(PYTHON) pp_test.py)

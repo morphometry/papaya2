@@ -24,7 +24,10 @@ jobs:
     - name: Install numpy
       run: pip install numpy
     - name: Compile python3 module without CGAL
-      run: cd python; make && python3 test.py && make clean
+      run: |
+        cd python
+        make
+        make non_cgal_test
     - name: Compile demos without libraries
       run: cd demos; make -j imganalysis sersic && make clean
     - name: Install CGAL
@@ -32,4 +35,9 @@ jobs:
     - name: Compile demos with CGAL
       run: cd demos; echo CXXFLAGS+=-I../CGAL-5.1/include >features.mk; make -j imganalysis sersic ppanalysis && make clean
     - name: Compile python3 module with CGAL
-      run: cd python; echo CXXFLAGS+=-I../CGAL-5.1/include >features.mk; make && python3 test.py && make clean
+      run: |
+        cd python
+        make clean
+        echo CXXFLAGS+=-I../CGAL-5.1/include >features.mk
+        make
+        make test

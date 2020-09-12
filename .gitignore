@@ -9,5 +9,4 @@ features.mk
 perf.data*
 TRASH
 
-python/pypaya2.so
 matlab/*.mex*
