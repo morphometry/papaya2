@@ -7,17 +7,19 @@ SO_EXTENSION = so
 # compile pypaya2 for Python 3
 PYTHON_VERSION = 3
 
+# override defaults here
+-include features.mk
+
 ifeq ($(PYTHON_VERSION), 3)
     PYTHON_CXXFLAGS += -DPYTHON_3
     PYTHON_CXXFLAGS += `python3-config --includes`
     PYTHON_CXXFLAGS += `python3 ../config/detect-numpy.py`
+    PYTHON_LDFLAGS += `python3-config --ldflags`
 else
     PYTHON_CXXFLAGS += `python-config --includes`
     PYTHON_CXXFLAGS += `python ../config/detect-numpy.py`
+    PYTHON_LDFLAGS += `python-config --ldflags`
 endif
-
-# override defaults here
--include features.mk
 
 CXXFLAGS += -I../include $(PYTHON_CXXFLAGS)
 LDFLAGS += $(PYTHON_LDFLAGS) $(CGAL_LDFLAGS)
