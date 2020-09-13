@@ -12,10 +12,8 @@ papaya2 needs no installation, it is an header only library.
 
 # Demos
 
-papaya2 includes several demos which can be found in the demo folder. To build the demos, execute
-
-    cd demos
-    make
+papaya2 includes several demos which can be found in the demo folder,
+see the [README](https://github.com/morphometry/papaya2/blob/master/demos/README.md) file.
 
 An interactive demo can be found at <https://morphometry.org/morphometer>.
 It is based on the JavaScript binding of papaya2.
