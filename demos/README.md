@@ -44,7 +44,7 @@ See `./banana help` and <https://morphometry.org/software/papaya2/> for further 
 and computes Minkowski Tensors of their excursion sets.
 
     make sersic
-    ./sersic scan_angle threshold 1.5 aspect 0.3 resolution 300 interpolated_marching_squares
+    ./sersic scan_angle threshold 1.5 aspect 0.3 resolution 300 interpolated_marching_squares >sersic0.3.txt
 
 The `sersic` example does not require external dependencies.
 
