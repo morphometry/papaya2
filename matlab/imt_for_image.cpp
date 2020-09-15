@@ -25,6 +25,8 @@
 #include <mex.hpp>
 #include <mexAdapter.hpp>
 
+using namespace papaya2;
+
 // structure to implement data transfer from Matlab to C++.
 // input argument is a Matlab data structure containing an array of doubles.
 struct MexPhoto
