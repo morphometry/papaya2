@@ -176,6 +176,8 @@ struct Datafile
 
     void comment(const string &comment) { os << "# " << comment << "\n"; }
 
+    std::ostream &raw() { return os; }
+
   private:
     std::ofstream os;
     void init()

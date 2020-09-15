@@ -46,8 +46,8 @@ int main(int argc, const char **argv)
 
     PingFile infile(infilename);
     Datafile outfile(outfilename);
-    outfile.comment("threshold area perim q2 arg2 q3 arg3 q4 arg4 q5 arg5 q6 "
-                    "arg6 q7 arg7 q8 arg8");
+    outfile.raw() << "#threshold area perim q2 arg2 q3 arg3 q4 arg4 q5 arg5 q6 "
+                     "arg6 q7 arg7 q8 arg8";
 
     for (auto thresh : logspace(min_thresh, max_thresh, num_thresh, true)) {
         auto imt = imt_interpolated_marching_squares(infile, thresh);

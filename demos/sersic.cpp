@@ -42,7 +42,7 @@ int main(int, const char **argv)
 
     if (mode == "scan_threshold") {
         (ds.*method)(Sersic(1., aspect, deg2rad(10)));
-        Datafile df(std::cout << "# threshold area perimeter q2 q3 q4\n");
+        Datafile df(std::cout << "#threshold area perimeter q2 q3 q4\n");
         for (auto threshold : logspace(1.1, 2.71828, 30, true)) {
             if (!interpolated_marching_squares)
                 imt = imt_regular_marching_squares(ds, threshold);
@@ -55,9 +55,9 @@ int main(int, const char **argv)
         }
     } else if (mode == "scan_angle") {
         const double ellip = std::sqrt(1 - fsq(aspect));
-        Datafile df(std::cout << "# angle area perimeter q2 q3 q4\n"
-                              << "# aspect ratio " << aspect << " ellipticity "
-                              << ellip << "\n");
+        Datafile df(std::cout << "# aspect ratio " << aspect << " ellipticity "
+                              << ellip << "\n"
+                              << "#angle area perimeter q2 q3 q4\n");
         for (auto angle : linspace(0, .5 * TWO_PI, 50, false)) {
             (ds.*method)(Sersic(1., aspect, angle));
             if (!interpolated_marching_squares)
