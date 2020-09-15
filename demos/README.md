@@ -31,7 +31,7 @@ See `./ppanalysis help` and <https://morphometry.org/software/papaya2/> for furt
 ## `banana`
 
 `banana` analyzes astrophysics data in FITS format.  The `CCfits` library is required to build,
-see below.
+see the end of this document.  After successful compilation with `make banana` it can be used like
 
     ./banana in example_inputs/SIE_detail2.fits out SIE_detail2_out.dat mint 0.0003 maxt 0.003 numt 100
 
@@ -43,6 +43,7 @@ See `./banana help` and <https://morphometry.org/software/papaya2/> for further 
 [Sérsic density profiles](https://en.wikipedia.org/wiki/Sersic_profile)
 and computes Minkowski Tensors of their excursion sets.
 
+    make sersic
     ./sersic scan_angle threshold 1.5 aspect 0.3 resolution 300 interpolated_marching_squares
 
 The `sersic` example does not require external dependencies.
