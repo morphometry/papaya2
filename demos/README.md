@@ -33,7 +33,7 @@ See `./ppanalysis help` and <https://morphometry.org/software/papaya2/> for furt
 `banana` analyzes astrophysics data in FITS format.  The `CCfits` library is required to build,
 see below.
 
-    ./banana in example_inputs/test_SIE_detail2.fits out test_SIE_detail2_out.dat mint 0.0003 maxt 0.003 numt 100
+    ./banana in example_inputs/SIE_detail2.fits out SIE_detail2_out.dat mint 0.0003 maxt 0.003 numt 100
 
 See `./banana help` and <https://morphometry.org/software/papaya2/> for further information.
 
