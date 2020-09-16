@@ -67,7 +67,7 @@ int main(int argc, const char **argv)
     if (vd.periodic)
         outfile << "with periodic boundary conditions\n# box size: " << vd.boxLx
                 << " " << vd.boxLy;
-    outfile << "\n# seedx seedy area perimeter q2 q3 q4 q5 q6\n";
+    outfile << "\n#seedx seedy area perimeter q2 q3 q4 q5 q6\n";
     outfile.precision(8);
     if (!outfile) {
         std::cerr << "unable to open output file: " << outfilename << "\n";
