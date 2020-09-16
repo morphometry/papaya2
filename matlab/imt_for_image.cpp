@@ -5,7 +5,7 @@
 // 2019 Jenny Wagner <j.wagner@uni-heidelberg.de>
 //
 // compile in matlab with the command
-// mex -v imt_for_image.cpp
+// mex -v -I ../include imt_for_image.cpp
 //
 // function call:
 // output_array = imt_for_image(input_image, thresholds)

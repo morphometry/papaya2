@@ -6,10 +6,26 @@
 // 2019 Fabian Schaller <physik@fabian-schaller.de>
 // FIXME this does not have tests yet
 //
-// compile in matlab with the command
-// mex -v -lCGAL -lCGAL_Core -lgmp imt_for_pointpattern.cpp
-// you may need to add paths to CGAL, like this:
+//
+// Compiling
+//
+// Compiling this in MATLAB is a little tricky because we use the CGAL
+// library.
+//
+// If you have CGAL with a version < 5.0
+//
+// mex -v -lCGAL -lCGAL_Core -lgmp -I ../include imt_for_pointpattern.cpp
+//
+// if you have CGAL with a version >= 5.0
+//
+// mex -v -lgmp -I ../include -std=c++14 imt_for_pointpattern.cpp
+//
+// If the CGAL library is not installed in one of the paths searched
+// by your C++ compiler, you may need to add paths to CGAL, like this:
 // ... -I<path_to_CGAL> -L<path_to_CGAL_libs> ...
+//
+//
+// Usage
 //
 // function call for periodic boundaries:
 // output_array = imt_for_pointpattern(input_array, [box_side_x, box_side_y])
