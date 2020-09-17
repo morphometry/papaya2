@@ -61,18 +61,17 @@ Here, we present `papaya2`, a C++ library which facilitates computation of
 irreducible Minkowski Tensors for two-dimensional geometries and shapes, including planar
 objects bounded by polygonal contours, collections of points (point patterns)
 and greyscale pixel data.
-
 This library is accompanied by example programs and
 bindings for Python, Matlab, and the JavaScript language.
-We also present the [Morphometer](https://morphometry.org/morphometer/), an
-interactive online resource for analyzing two-dimensional structures which uses papaya2
-for computations.
 
 `Papaya2` is a rewrite of [`papaya`](https://github.com/skapfer/papaya) with a
 library interface, support for irreducible Minkowski Tensors and interpolated marching squares, and
 extensions to Matlab, JavaScript and Python provided.  While the tensor of inertia is computed
 by many tools, we are not aware of other open-source software which provides
 higher-rank shape characterization in 2D.
+
+For the analysis of the examples in this paper, we employ our interactive online resource
+[Morphometer](https://morphometry.org/morphometer/) which uses `papaya2` for its computations.
 
 # C++ library papaya2
 
@@ -122,33 +121,38 @@ patterns via the Voronoi tessellation approach [@bib:AnisoFluids2010].  The demo
 `ppanalysis` exemplifies how to use this header file.  For computing the Voronoi diagram,
 the [CGAL](https://cgal.org/) library is required.
 
-# Application: Morphometer
+# Application Examples
 
-We use `papaya2.js`, the JavaScript version of the `papaya2` library in our interactive analysis tool [Morphometer](https://morphometry.org/morphometer/).
-It provides rapid analysis of small amounts of data (up to 1000 points, or 500x500 pixels).
+Here we show some examples analyzed in the [Morphometer web application](https://morphometry.org/morphometer/),
+which uses `papaya2.js`, the JavaScript version of the `papaya2`.
+Morphometer provides rapid analysis of small amounts of data (up to 1000 points, or 500x500 pixels).
 For routine analysis we recommend using the `ppanalysis` and `imganalysis` demos or Python/Matlab bindings.
 
 ![Minkowski Tensor analysis of a polygon in Morphometer.\label{fig:morpho-ui}](morphometer-single-polygon.png)
 
-Morphometer provides several advanced analysis modes:
+Minkowski Tensors can be applied to different types of data:
 
-- Single polygon mode: \autoref{fig:morpho-ui} shows the user interface of Morphometer when analyzing a single polygon (left-hand side).
-On the right-hand side, the Minkowski structure metrics of the polygon are displayed.
+- Single polygons: $s$-fold symmetric polygons are characterized by high values of $q_s$.
+\autoref{fig:morpho-ui} shows a polygon with approximately triangular shape.
+Therefore, we find high values of $q_3$, $q_6$, $q_9$, etc.
+The distinguished directions of each $\Psi_s$ are depicted on the right of the $q_s$ bar diagram.
 
-![Minkowski Tensor analysis of a Poisson point pattern.\label{fig:morpho-pp-mode}](morphometer-granular-cryst-cluster.png)
+![Minkowski Tensor analysis of a point pattern induced by a granular crystal cluster.\label{fig:morpho-pp-mode}](morphometer-granular-cryst-cluster.png)
 
-- Point pattern analysis mode can be used to analyze abstract point patterns and data of physical particle systems.
-For the analysis, a Voronoi tessellation of the points is constructed and Minkowski Tensors of the individual
-Voronoi cells are computed.  Morphometer provides histograms and basic statistics of the morphometric data,
-see \autoref{fig:morpho-pp-mode}. The example show the analysis of a granular crystal cluster. The Minkowski
-structure metric $q_6$ is very well suited to detect hexagonal crystalline structures.
+- Point patterns can be, for instance, realizations of abstract point processes or data of physical particle systems.
+For the Minkowski Tensor analysis, a Voronoi tessellation of the points is constructed and
+Minkowski Tensors of the individual Voronoi cells are computed.
+\autoref{fig:morpho-pp-mode} shows a hexagonal crystal cluster surrounded by an amorphous background.
+The Minkowski structure metric $q_6$ (indicated by the color coding) is very well suited to detect hexagonal crystalline structures.
+The presence of ideal hexagonal cells is demonstrated by the peak at $q_6 = 1$ in the histogram on the right-hand side.
 
 ![Minkowski Tensor analysis of a greyscale image: a Gaussian random field.\label{fig:morpho-image-mode}](morphometer-image-analysis.png)
-
-- Image analysis mode can be used to analyze single-channel (e.g. greyscale) pixel data.
-User-provided images are segmented using
-the Marching Squares algorithm, and a morphometric analysis using Minkowski Tensors is performed for either
-the complete image or a region of interest, see \autoref{fig:morpho-image-mode}.
+ 
+- Greyscale images can also be analyzed in terms of Minkowski Tensors.
+\autoref{fig:morpho-image-mode} (left) shows a detail of an anisotropic Gaussian random field,
+which is converted into a binary image by thresholding (center) and analyzed using Minkowski Tensors (right).
+The significant $q_2$ value in the Minkowski analysis (right) shows that the random field has a preferred direction,
+which is also reflected by the distinguished direction marker (red color).
 
 # Demos and language bindings
 
