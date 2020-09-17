@@ -95,7 +95,7 @@ accessors to retrieve common morphometric data, including the following:
 see [Morphometry page](https://morphometry.org/theory/anisotropy-analysis-by-imt/) and [@bib:Mickel2013] for details
 
 - `imt(s)`  The $s$-th irreducible Minkowski tensor $\Psi_s$,
-see [Morphometry page](https://morphometry.org/theory/anisotropy-analysis-by-imt/) for details
+see previous item for details
 
 The library provides convenient wrapper functions which encapsulate common analysis tasks.
 In general, these functions are C++ function templates which operate on user data structures.
@@ -103,12 +103,12 @@ User-supplied data structures need to include some required methods and operator
 The most important entrypoints are
 
 - `papaya2::imt_polygon`:
-compute the irreducible Minkowski tensors of closed convex polygons, specified as a sequence
+compute the irreducible Minkowski tensors of closed simple polygons, specified as a sequence
 of vertices in counterclockwise order.
 
 - `papaya2::imt_interpolated_marching_squares`:
 computes the irreducible Minkowski tensors of an excursion set of a single channel of a raster
-graphics image (bitmap).  An extended version of the classic Marching Squares algorithm is
+graphics image (bitmap).  An extended version of the Marching Squares algorithm is
 used which computes interpolated contours from 2x2 neighborhoods, see [@bib:Mantz2008] for details.
 The input data is passed to `papaya2` by reference via a suitable adapter class to avoid copies.
 There are several examples of adapter classes provided, as well as a copying container (`BasicPhoto`).
@@ -118,8 +118,7 @@ implements the Minkowski map algorithm [@bib:SchroederMicro2010] for a space-res
 
 The supplementary header `<papaya2/voronoi.hpp>` implements the Minkowski Tensor analysis of point
 patterns via the Voronoi tessellation approach [@bib:AnisoFluids2010].  The demo
-`ppanalysis` exemplifies how to use this header file.  For computing the Voronoi diagram,
-the [CGAL](https://cgal.org/) library is required.
+`ppanalysis` exemplifies how to use this header file.
 
 # Application Examples
 
@@ -133,7 +132,7 @@ For routine analysis we recommend using the `ppanalysis` and `imganalysis` demos
 Minkowski Tensors can be applied to different types of data:
 
 - Single polygons: $s$-fold symmetric polygons are characterized by high values of $q_s$.
-\autoref{fig:morpho-ui} shows a polygon with approximately triangular shape.
+\autoref{fig:morpho-ui} shows a polygon with approximates an equilateral triangle.
 Therefore, we find high values of $q_3$, $q_6$, $q_9$, etc.
 The distinguished directions of each $\Psi_s$ are depicted on the right of the $q_s$ bar diagram.
 
@@ -142,8 +141,8 @@ The distinguished directions of each $\Psi_s$ are depicted on the right of the $
 - Point patterns can be, for instance, realizations of abstract point processes or data of physical particle systems.
 For the Minkowski Tensor analysis, a Voronoi tessellation of the points is constructed and
 Minkowski Tensors of the individual Voronoi cells are computed.
-\autoref{fig:morpho-pp-mode} shows a hexagonal crystal cluster surrounded by an amorphous background.
-The Minkowski structure metric $q_6$ (indicated by the color coding) is very well suited to detect hexagonal crystalline structures.
+\autoref{fig:morpho-pp-mode} (left) shows a hexagonal crystal cluster surrounded by an amorphous background.
+The Minkowski structure metric $q_6$ (indicated by the color of the Voronoi cells) is very well suited to detect hexagonal crystalline structures.
 The presence of ideal hexagonal cells is demonstrated by the peak at $q_6 = 1$ in the histogram on the right-hand side.
 
 ![Minkowski Tensor analysis of a greyscale image: a Gaussian random field.\label{fig:morpho-image-mode}](morphometer-image-analysis.png)
@@ -158,8 +157,8 @@ which is also reflected by the distinguished direction marker (red color).
 
 In the directory `demos`, we provide a number of example programs which use the library
 for data analysis.  These are meant to be modified and adapted to user needs as required.
-For simple analyses, they can be used directly, see the
-[documentation](https://morphometry.org/software/papaya2/).
+For simple analyses, they can be used directly, see the 
+[README file](https://github.com/morphometry/papaya2/blob/master/demos/README.md) in the `demos` folder.
 
 We also provide bindings of the library for Python, Matlab and JavaScript.
 
