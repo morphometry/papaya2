@@ -125,7 +125,7 @@ the [CGAL](https://cgal.org/) library is required.
 # Application: Morphometer
 
 We use `papaya2.js`, the JavaScript version of the `papaya2` library in our interactive analysis tool [Morphometer](https://morphometry.org/morphometer/).
-It provides rapid analysis of small amounts of data (up to 500 points, or 500x500 pixels).
+It provides rapid analysis of small amounts of data (up to 1000 points, or 500x500 pixels).
 For routine analysis we recommend using the `ppanalysis` and `imganalysis` demos or Python/Matlab bindings.
 
 ![Minkowski Tensor analysis of a polygon in Morphometer.\label{fig:morpho-ui}](morphometer-single-polygon.png)
