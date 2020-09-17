@@ -165,7 +165,7 @@ We acknowledge funding by Deutsche Forschungsgemeinschaft as part of the [Forsch
 
 We are grateful to Daniel Hug, Günther Last, Klaus Mecke and Gerd Schröder-Turk for guidance and support,
 to Michael Klatt for many discussions and for his contributions to the scientific concept and content of the
-Morphometer, and to Simon Weis for technical advice.
+Morphometer, to Dennis Müller and Thomas Schindler for example data, and to Simon Weis for technical advice.
 
 We use [picopng](https://lodev.org/lodepng/) for loading PNG images,
 [emscripten](https://emscripten.org/) for compiling to JavaScript,
