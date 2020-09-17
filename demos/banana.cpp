@@ -1,8 +1,10 @@
 // banana: trivial program which load a FITS file, and computes
 // IMT's for a number of interpolated marching squares thresholds
-// using the preliminary Papaya2 library.
-// 2018 Sebastian Kapfer <sebastian.kapfer@fau.de>
-// 2018 Jenny Wagner <j.wagner@uni-heidelberg.de>
+// using the Papaya2 library.
+// This program reads the primary HDU frame in the FITS container
+// only, please modify as appropriate if you need something else.
+// 2018-2020 Sebastian Kapfer <sebastian.kapfer@fau.de>
+// 2018-2020 Jenny Wagner <j.wagner@uni-heidelberg.de>
 #include "common.hpp"
 #include <CCfits/CCfits>
 #include <valarray>
