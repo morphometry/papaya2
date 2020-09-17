@@ -1,6 +1,6 @@
-% add -I (includepath) -L (libpath) -l (libraries) as required
+% You may need to modify the "mex" line to add include and library paths.
 % see imt_for_pointpattern.cpp for more information
-mex -v -lCGAL -lCGAL_Core -lgmp imt_for_pointpattern.cpp
+mex -v -lgmp -I ../include -std=c++14 imt_for_pointpattern.cpp;
 a = readtable('test_pp.txt');
 a = table2array(a);
 % without periodic boundary conditions
