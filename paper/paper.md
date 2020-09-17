@@ -82,7 +82,7 @@ and 2D image input data.
 
 `papaya2` is a header-only template library designed to operate on user data structures.
 We bundle several example programs which can be adapted to user requirements,
-or employed directly for simple analyses (see section *Command-line tools*).
+or employed directly for simple analyses (see section *Demos*).
 
 The main components of the library are defined in the header file `<papaya2.hpp>`.
 Analysis results are returned in a `MinkowskiAccumulator` object, which offers
@@ -118,7 +118,7 @@ There are several examples of adapter classes provided, as well as a copying con
 implements the Minkowski map algorithm [@bib:SchroederMicro2010] for a space-resolved anisotropy analysis.
 
 The supplementary header `<papaya2/voronoi.hpp>` implements the Minkowski Tensor analysis of point
-patterns via the Voronoi tessellation approach [@bib:AnisoFluids2010].  The command-line tool
+patterns via the Voronoi tessellation approach [@bib:AnisoFluids2010].  The demo
 `ppanalysis` exemplifies how to use this header file.  For computing the Voronoi diagram,
 the [CGAL](https://cgal.org/) library is required.
 
@@ -126,7 +126,7 @@ the [CGAL](https://cgal.org/) library is required.
 
 We use `papaya2.js`, the JavaScript version of the `papaya2` library in our interactive analysis tool [Morphometer](https://morphometry.org/morphometer/).
 It provides rapid analysis of small amounts of data (up to 500 points, or 500x500 pixels).
-For routine analysis we recommend using the command-line tools or Python/Matlab bindings.
+For routine analysis we recommend using the `ppanalysis` and `imganalysis` demos or Python/Matlab bindings.
 
 ![Minkowski Tensor analysis of a polygon in Morphometer.\label{fig:morpho-ui}](morphometer-single-polygon.png)
 
@@ -150,7 +150,7 @@ User-provided images are segmented using
 the Marching Squares algorithm, and a morphometric analysis using Minkowski Tensors is performed for either
 the complete image or a region of interest, see \autoref{fig:morpho-image-mode}.
 
-# Command-line tools and bindings
+# Demos and language bindings
 
 In the directory `demos`, we provide a number of example programs which use the library
 for data analysis.  These are meant to be modified and adapted to user needs as required.
