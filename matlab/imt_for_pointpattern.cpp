@@ -20,6 +20,8 @@
 //
 // mex -v CXXFLAGS='-std=c++14' -I"../include" -lgmp imt_for_pointpattern.cpp
 //
+// If in doubt, try both.
+//
 // If the CGAL library is not installed in one of the paths searched
 // by your C++ compiler, you may need to add paths to CGAL, like this:
 // ... -I<path_to_CGAL> -L<path_to_CGAL_libs> ...
