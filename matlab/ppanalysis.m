@@ -1,6 +1,6 @@
 % You may need to modify the "mex" line to add include and library paths.
 % see imt_for_pointpattern.cpp for more information
-mex -v -lgmp -I ../include -std=c++14 imt_for_pointpattern.cpp;
+mex -v CXXFLAGS='-std=c++14' -I"../include" -lgmp imt_for_pointpattern.cpp;
 a = readtable('test_pp.txt');
 a = table2array(a);
 % without periodic boundary conditions
