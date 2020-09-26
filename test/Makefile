@@ -1,5 +1,5 @@
 CXXFLAGS += -g -O3 -std=c++11
-CXXFLAGS += -Wall -Werror
+CXXFLAGS += -Wall
 CXXFLAGS += -I../include
 
 MAKEFILES = \
