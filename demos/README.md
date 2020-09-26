@@ -59,3 +59,22 @@ On MacOS with [Homebrew](https://docs.brew.sh/)
     brew install boost cgal ccfits
 
 Once you have installed any missing dependencies, type `make clean` to have the Makefile detect them.
+
+If any required libraries are not found in standard paths, those paths must be added to your compiler's configuration by extending `features.mk` with the following lines:
+
+        CXXFLAGS += -I /extra/directory/to/include -I /even/more/directories/to/include
+        LDFLAGS += -L /extra/directory/which/has/the/lib
+
+Run `make clean` to have the Makefile detect the libraries in the new paths.
+
+### Manual download of CGAL
+
+If your system does not come with the CGAL library, you will have to download it for compiling `ppanalysis`.
+With a recent version of your C++ compiler, there is no reason to install CGAL at all as it supports a header-only mode.
+The following commands will download and compile `ppanalysis` with CGAL 5.1:
+
+        curl -L https://dl.bintray.com/boostorg/release/1.74.0/source/boost_1_74_0.tar.bz2 | tar xj
+        curl -L https://github.com/CGAL/cgal/releases/download/v5.1/CGAL-5.1.tar.xz | tar xJ
+        echo CXXFLAGS += -I CGAL-5.1/include -I boost_1_74_0 >features.mk
+        make clean
+        make ppanalysis
