@@ -172,7 +172,7 @@ Morphometer, to Dennis Müller and Thomas Schindler for example data, and to Sim
 
 We use [picopng](https://lodev.org/lodepng/) for loading PNG images,
 [emscripten](https://emscripten.org/) for compiling to JavaScript,
-[CGAL](https://cgal.org/) and [d3-voronoi](https://github.com/d3/d3-voronoi) for Voronoi diagrams,
+[CGAL](https://cgal.org/) for Voronoi diagrams,
 and
 [Catch2](https://github.com/catchorg/Catch2) for unit tests.
 
