@@ -20,11 +20,11 @@ authors:
     orcid: 0000-0002-7591-2739
     affiliation: "1"
 affiliations:
- - name: Theoretische Physik 1, FAU Erlangen-Nürnberg
+ - name: Theoretische Physik 1, FAU Erlangen-Nürnberg, Germany
    index: 1
- - name: Institut für Stochastik, Karlsruhe Institute for Technology
+ - name: Institut für Stochastik, Karlsruhe Institute for Technology, Germany
    index: 2
- - name: Zentrum für Astronomie, Universität Heidelberg
+ - name: Zentrum für Astronomie, Universität Heidelberg, Germany
    index: 3
 date: 24 May 2020
 bibliography: paper.bib
@@ -44,8 +44,8 @@ provide only limited tooling for higher-order anisotropy characterization;
 usually only the tensor of inertia (rank 2) is available.
 
 Minkowski Tensors are a systematic family of versatile and robust higher-order
-shape descriptors, originating in integral geometry, see [@bib:AdvMatReview] for an introduction and detailed references.  They
-allow for shape characterization to arbitrary order and promise a path to
+shape descriptors, originating in integral geometry, see @bib:AdvMatReview for an introduction and detailed references.  They
+allow for shape characterization of arbitrary order and promise a path to
 systematic structure-function relationships for direction-dependent properties.
 Minkowski Tensors have previously been applied to data as diverse as ice grain
 microstructure [@bib:SchroederMicro2010],
@@ -92,7 +92,7 @@ accessors to retrieve common morphometric data, including the following:
 - `perimeter()`  The perimeter (boundary length) of the geometry
 
 - `msm(s)`  The $s$-th Minkowski structure metric $q_s$,
-see [Morphometry page](https://morphometry.org/theory/anisotropy-analysis-by-imt/) and [@bib:Mickel2013] for details
+see [Morphometry page](https://morphometry.org/theory/anisotropy-analysis-by-imt/) and @bib:Mickel2013 for details
 
 - `imt(s)`  The $s$-th irreducible Minkowski tensor $\Psi_s$,
 see previous item for details
@@ -107,9 +107,9 @@ compute the irreducible Minkowski tensors of closed simple polygons, specified a
 of vertices in counterclockwise order.
 
 - `papaya2::imt_interpolated_marching_squares`:
-computes the irreducible Minkowski tensors of an excursion set of a single channel of a raster
+computes the irreducible Minkowski Tensors of an excursion set of a single channel of a raster
 graphics image (bitmap).  An extended version of the Marching Squares algorithm is
-used which computes interpolated contours from 2x2 neighborhoods, see [@bib:Mantz2008] for details.
+used which computes interpolated contours from 2x2 neighborhoods, see @bib:Mantz2008 for details.
 The input data is passed to `papaya2` by reference via a suitable adapter class to avoid copies.
 There are several examples of adapter classes provided, as well as a copying container (`BasicPhoto`).
 
