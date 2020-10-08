@@ -58,14 +58,14 @@ An accessible introduction to Minkowski Tensors can be found on
 [www.morphometry.org](https://morphometry.org/theory/anisotropy-analysis-by-imt/).
 
 Here, we present `papaya2`, a C++ library which facilitates computation of
-irreducible Minkowski Tensors for two-dimensional geometries and shapes, including planar
+Irreducible Minkowski Tensors for two-dimensional geometries and shapes, including planar
 objects bounded by polygonal contours, collections of points (point patterns)
 and greyscale pixel data.
 This library is accompanied by example programs and
 bindings for Python, Matlab, and the JavaScript language.
 
 `Papaya2` is a rewrite of [`papaya`](https://github.com/skapfer/papaya) with a
-library interface, support for irreducible Minkowski Tensors and interpolated marching squares, and
+library interface, support for Irreducible Minkowski Tensors and interpolated marching squares, and
 extensions to Matlab, JavaScript and Python provided.  While the tensor of inertia is computed
 by many tools, we are not aware of other open-source software which provides
 higher-rank shape characterization in 2D.
@@ -75,8 +75,8 @@ For the analysis of the examples in this paper, we employ our interactive online
 
 # C++ library papaya2
 
-The C++ 11 library `papaya2` contains the core algorithms to compute irreducible
-Minkowski tensors of two-dimensional geometries.  It processes both polygonal
+The C++ 11 library `papaya2` contains the core algorithms to compute Irreducible
+Minkowski Tensors of two-dimensional geometries.  It processes both polygonal
 and 2D image input data.
 
 `papaya2` is a header-only template library designed to operate on user data structures.
@@ -94,7 +94,7 @@ accessors to retrieve common morphometric data, including the following:
 - `msm(s)`  The $s$-th Minkowski structure metric $q_s$,
 see [Morphometry page](https://morphometry.org/theory/anisotropy-analysis-by-imt/) and @bib:Mickel2013 for details
 
-- `imt(s)`  The $s$-th irreducible Minkowski tensor $\Psi_s$,
+- `imt(s)`  The $s$-th Irreducible Minkowski Tensor $\Psi_s$,
 see previous item for details
 
 The library provides convenient wrapper functions which encapsulate common analysis tasks.
@@ -103,11 +103,11 @@ User-supplied data structures need to include some required methods and operator
 The most important entrypoints are
 
 - `papaya2::imt_polygon`:
-compute the irreducible Minkowski tensors of closed simple polygons, specified as a sequence
+compute the Irreducible Minkowski Tensors of closed simple polygons, specified as a sequence
 of vertices in counterclockwise order.
 
 - `papaya2::imt_interpolated_marching_squares`:
-computes the irreducible Minkowski Tensors of an excursion set of a single channel of a raster
+computes the Irreducible Minkowski Tensors of an excursion set of a single channel of a raster
 graphics image (bitmap).  An extended version of the Marching Squares algorithm is
 used which computes interpolated contours from 2x2 neighborhoods, see @bib:Mantz2008 for details.
 The input data is passed to `papaya2` by reference via a suitable adapter class to avoid copies.
