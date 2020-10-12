@@ -14,7 +14,7 @@ If you're using this work in published work, please cite
 
 # Installation
 
-papaya2 needs no installation, it is an header only library.
+papaya2 needs no installation, it is an header-only library.
 
 
 # Demos
