@@ -1,4 +1,4 @@
-name: Papaya2
+name: linux-test
 
 on: [push]
 
