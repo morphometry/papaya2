@@ -446,4 +446,16 @@ TEST_CASE("marching squares algorithm")
         CHECK(coords_test(0,0) == 255.);
         CHECK(coords_test(1,0) == 255.);
     }
+    SECTION("Coordinate system orientation and channel order PNG")
+    {
+        PingFile coords_test("validation_data/channels.png");
+        CHECK(coords_test.width() == 2);
+        CHECK(coords_test.height() == 3);
+        CHECK(coords_test(0,2) == 0.);
+        CHECK(coords_test(1,2) == 60.);
+        CHECK(coords_test(0,1) == 120.);
+        CHECK(coords_test(1,1) == 240.);
+        CHECK(coords_test(0,0) == 255.);
+        CHECK(coords_test(1,0) == 255.);
+    }
 }
