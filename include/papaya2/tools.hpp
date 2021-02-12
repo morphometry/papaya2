@@ -34,7 +34,7 @@ inline std::vector<double> logspace(double low, double high, int n = 10,
 {
     if (!(low > 0. && high > 0. && n > 0))
         throw std::logic_error("for logspace, arguments must be positive");
-    double logincr = (log(high) - log(low)) / (n - include_endpoint);
+    double logincr = log(high / low) / (n - include_endpoint + 1e-99);
     std::vector<double> ret;
     ret.reserve(n);
     for (int i = 0; i != n; ++i)

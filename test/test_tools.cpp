@@ -65,6 +65,13 @@ TEST_CASE("logspace [tools]")
         CHECK(sequence[1] == approx(1e1));
         CHECK(sequence[2] == approx(1e2));
     }
+    SECTION("with just 1 level")
+    {
+        auto sequence = logspace(1234., 1234., 1, true);
+        CHECK(sequence[0] == approx(1234.));
+        sequence = logspace(1234., 2000., 1, true);
+        CHECK(sequence[0] == approx(1234.));
+    }
 }
 
 TEST_CASE("integer range container", "[range]")
