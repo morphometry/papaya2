@@ -415,6 +415,8 @@ TEST_CASE("marching squares algorithm")
         auto const imt =
             imt_interpolated_marching_squares(potato, 1.469734492275599e+02);
         using std::arg;
+        CHECK(potato.width() == 302);
+        CHECK(potato.height() == 361);
         CHECK(imt.area() == approx(7.760018008530601e+04));
         CHECK(imt.perimeter() == approx(1.009820521813200e+03));
         CHECK(imt.msm(2) == approx(1.563708314579508e-01));
@@ -431,5 +433,17 @@ TEST_CASE("marching squares algorithm")
         CHECK(arg(imt.imt(7)) == approx(1.404644402590062e+00));
         CHECK(imt.msm(8) == approx(1.860509319491248e-01));
         CHECK(arg(imt.imt(8)) == approx(7.356981574804343e-02));
+    }
+    SECTION("Coordinate system orientation PNG")
+    {
+        PingFile coords_test("validation_data/coordinates.png");
+        CHECK(coords_test.width() == 2);
+        CHECK(coords_test.height() == 3);
+        CHECK(coords_test(0,2) == 0.);
+        CHECK(coords_test(1,2) == 60.);
+        CHECK(coords_test(0,1) == 120.);
+        CHECK(coords_test(1,1) == 240.);
+        CHECK(coords_test(0,0) == 255.);
+        CHECK(coords_test(1,0) == 255.);
     }
 }
