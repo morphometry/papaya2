@@ -12,9 +12,6 @@ struct RefDeccer
     void operator()(PyObject *ref) { Py_XDECREF(ref); }
 };
 
-struct PythonErrorSet
-{};
-
 struct UniquePyPtr : std::unique_ptr<PyObject, RefDeccer>
 {
     using base_t = std::unique_ptr<PyObject, RefDeccer>;

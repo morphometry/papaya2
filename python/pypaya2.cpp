@@ -59,10 +59,42 @@ static UniquePyPtr np_make_new_vector(int N, int datatype)
     return ret;
 }
 
-static int const MAX_S = MinkowskiAccumulator::MAX_S;
+namespace {
+    [[ noreturn ]]
+    void throw_value_error(char const *format, ...)
+    {
+        char buf[200];
+        va_list args;
+        va_start(args, format);
+        std::vsnprintf(buf, sizeof(buf), format, args);
+        va_end(args);
+        throw std::domain_error(buf);
+    }
 
-extern "C"
-{
+    typedef PyObject *python_function(PyObject *, PyObject *, PyObject *);
+
+    template <python_function FUNCTION>
+    PyObject *parachute(PyObject *arg0, PyObject *args, PyObject *kwargs)
+    {
+        try {
+            return FUNCTION(arg0, args, kwargs);
+        }
+        catch(std::domain_error const &e)
+        {
+            (void)PyErr_Format(PyExc_ValueError, "%s", e.what());
+            return nullptr;
+        }
+        catch(std::exception const &e)
+        {
+            (void)PyErr_Format(PyExc_RuntimeError, "unexpected exception: %s", e.what());
+            return nullptr;
+        }
+    }
+
+#define WRAP_IN_PARACHUTE(function) ((PyCFunction)&parachute<function>)
+
+    static int const MAX_S = MinkowskiAccumulator::MAX_S;
+
     static PyObject *wrap_imt_for_polygon(PyObject *, PyObject *args, PyObject *)
     {
         UniquePyPtr ref_vertices = nullptr;
@@ -86,19 +118,12 @@ extern "C"
             npy_intp *dimensions = PyArray_DIMS(arr_vertices);
             N = dimensions[0];
             if (dimensions[1] != 2) {
-                (void)PyErr_Format(PyExc_ValueError, "data must be 2D, is %i",
-                                   (int)dimensions[1]);
-                return nullptr;
+                throw_value_error("data must be 2D, is %i", (int)dimensions[1]);
             } else if (N < 2) {
-                (void)PyErr_Format(PyExc_ValueError, "polygon must contain at least two vertices");
-                return nullptr;
+                throw_value_error("polygon must contain at least two vertices");
             }
         } else {
-            // PyErr_Format always returns 0 by documentation
-            (void)PyErr_Format(PyExc_ValueError,
-                               "# dimensions must be 2, is %i",
-                               (int)PyArray_NDIM(arr_vertices));
-            return nullptr;
+            throw_value_error("# dimensions must be 2, is %i", (int)PyArray_NDIM(arr_vertices));
         }
 
         std::vector<vec_t> vertices;
@@ -174,9 +199,7 @@ extern "C"
                     PyArray_FROM_OTF(boxarg, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY));
                 PyArrayObject *arr_box = ref_box.reinterpret<PyArrayObject>();
                 if (!arr_box) {
-                    (void)PyErr_Format(PyExc_RuntimeError,
-                                       "error converting box kwarg");
-                    return nullptr;
+                    throw std::runtime_error("error converting box kwarg");
                 }
 
                 if (PyArray_NDIM(arr_box) == 1) {
@@ -189,21 +212,15 @@ extern "C"
                         vd.boxLx = vd.boxLy = np_get_double(ref_box, 0);
                         vd.periodic = true;
                     } else {
-                        (void)PyErr_Format(
-                            PyExc_ValueError,
-                            "box kwarg must be length 1 oder length 2, is %i",
+                        throw_value_error("box kwarg must be length 1 oder length 2, is %i",
                             (int)dimensions[0]);
-                        return nullptr;
                     }
                 } else if (PyArray_NDIM(arr_box) == 0) {
                     vd.boxLx = vd.boxLy = np_get_double(ref_box, 0);
                     vd.periodic = true;
                 } else {
-                    (void)PyErr_Format(
-                        PyExc_ValueError,
-                        "box kwargs must be one-dimensional, is %i-dimensional",
+                    throw_value_error("box kwargs must be one-dimensional, is %i-dimensional",
                         (int)PyArray_NDIM(arr_box));
-                    return nullptr;
                 }
             }
         }
@@ -213,19 +230,11 @@ extern "C"
         if (PyArray_NDIM(arr_seeds) == 2) {
             npy_intp *dimensions = PyArray_DIMS(arr_seeds);
             N = dimensions[0];
-            if (dimensions[1] == 2) {
-                // OK
-            } else {
-                (void)PyErr_Format(PyExc_ValueError, "data must be 2D, is %i",
-                                   (int)dimensions[1]);
-                return nullptr;
+            if (dimensions[1] != 2) {
+                throw_value_error("data must be 2D, is %i", (int)dimensions[1]);
             }
         } else {
-            // PyErr_Format always returns 0 by documentation
-            (void)PyErr_Format(PyExc_ValueError,
-                               "# dimensions must be 2, is %i",
-                               (int)PyArray_NDIM(arr_seeds));
-            return nullptr;
+            throw_value_error("# dimensions must be 2, is %i", (int)PyArray_NDIM(arr_seeds));
         }
 
         // get output arrays
@@ -252,10 +261,7 @@ extern "C"
                 VoronoiDiagram::point_t const seed = fit->dual()->point();
 
                 if (seed != vd.seeds.at(label)) {
-                    (void)PyErr_Format(
-                        PyExc_RuntimeError,
-                        "CGAL decided to reorder our seed points.");
-                    return nullptr;
+                    throw std::runtime_error("CGAL decided to reorder our seed points.");
                 }
 
                 // compute Minkowski valuations and copy them over
@@ -348,20 +354,14 @@ extern "C"
                 threshold = PyFloat_AsDouble(threshold_arg);
 
                 if (threshold == -1. && PyErr_Occurred())
-                {
-                    (void)PyErr_Format(PyExc_RuntimeError,
-                                       "error converting threshold kwarg");
-                    return nullptr;
-                }
+                    throw std::runtime_error ("error converting threshold kwarg");
             }
         }
 
         PyArrayObject *arr_image = ref_image.reinterpret<PyArrayObject>();
         if (PyArray_NDIM(arr_image) != 2) {
-            (void)PyErr_Format(PyExc_ValueError,
-                               "# dimensions of image must be 2, is %i",
-                               (int)PyArray_NDIM(arr_image));
-            return nullptr;
+            throw_value_error("# dimensions of image must be 2, is %i",
+                    (int)PyArray_NDIM(arr_image));
         }
 
         auto const original = NumpyArrayPhoto(arr_image);
@@ -408,14 +408,14 @@ extern "C"
     }
 
     static PyMethodDef mymethods[] = {
-        {"imt_for_polygon", (PyCFunction)wrap_imt_for_polygon,
+        {"imt_for_polygon", WRAP_IN_PARACHUTE(wrap_imt_for_polygon),
          METH_VARARGS,
          "imt_for_polygon(vertices)\n"
          "compute the Minkowski of the polygon bounded by the vertices. "
          "Vertices are assumed to be in counterclockwise order.\n"
          "Returns a dictionary mapping each metric to its value.\n"},
 #ifdef HAVE_CGAL
-        {"imt_for_pointpattern", (PyCFunction)wrap_imt_for_pointpattern,
+        {"imt_for_pointpattern", WRAP_IN_PARACHUTE(wrap_imt_for_pointpattern),
          METH_VARARGS | METH_KEYWORDS,
          "imt_for_pointpattern(seeds)\n"
          "imt_for_pointpattern(seeds, box=[Lx, Ly])\n"
@@ -428,7 +428,7 @@ extern "C"
          "seed point, in\n"
          "input order.  If any cell is unbounded, its metrics will be NaN.\n"},
 #endif
-        {"imt_for_image", (PyCFunction)wrap_imt_for_image,
+        {"imt_for_image", WRAP_IN_PARACHUTE(wrap_imt_for_image),
          METH_VARARGS | METH_KEYWORDS,
          "imt_for_image(image)\n"
          "imt_for_image(seeds, threshold=value)\n"
@@ -436,7 +436,9 @@ extern "C"
          "The unit of scale is assumed to be 1 pixel.\n"},
         {nullptr, nullptr, 0, nullptr} // sentinel
     };
+} // anonymous namespace
 
+extern "C" {
 #ifdef PYTHON_3
     static PyModuleDef module_def = {
         PyModuleDef_HEAD_INIT,
