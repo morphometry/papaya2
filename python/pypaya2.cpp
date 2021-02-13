@@ -292,6 +292,121 @@ extern "C"
     }
 #endif // HAVE_CGAL
 
+    struct NumpyArrayPhoto
+    {
+        NumpyArrayPhoto(PyArrayObject *array)
+            : array_(array)
+        {
+            npy_intp *dimensions = PyArray_DIMS(array);
+            width_ = dimensions[0];
+            height_ = dimensions[1];
+        }
+
+        unsigned long width_, height_;
+        PyArrayObject *array_;
+
+        double operator()(int i, int j) const
+        {
+            if (!(i >= 0 && i < width()))
+                throw std::range_error("NumpyArrayPhoto i");
+            if (!(j >= 0 && j < height()))
+                throw std::range_error("NumpyArrayPhoto j");
+            return *reinterpret_cast<double const *>(PyArray_GETPTR2(array_, i, j));
+        }
+
+        int width() const { return width_; }
+        int height() const { return height_; }
+        papaya2::vec_t origin() const { return {0., 0.}; }
+        papaya2::vec_t upper_right() const
+        {
+            return {double(width()), double(height())};
+        }
+    };
+
+
+    static PyObject *wrap_imt_for_image(PyObject *, PyObject *args,
+                                        PyObject *kwargs)
+    {
+        UniquePyPtr ref_image = nullptr;
+        double threshold = .5;
+        double padding_value = 0;
+
+        {
+            PyObject *arg1 = nullptr;
+            if (!PyArg_ParseTuple(args, "O", &arg1, nullptr))
+                return nullptr;
+            ref_image = UniquePyPtr(
+                PyArray_FROM_OTF(arg1, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY));
+            if (!ref_image)
+                return nullptr;
+        }
+
+        if (kwargs) {
+            // FIXME flag illegal kwargs
+
+            if (PyObject *threshold_arg = PyDict_GetItemString(kwargs, "threshold")) {
+                threshold = PyFloat_AsDouble(threshold_arg);
+
+                if (threshold == -1. && PyErr_Occurred())
+                {
+                    (void)PyErr_Format(PyExc_RuntimeError,
+                                       "error converting threshold kwarg");
+                    return nullptr;
+                }
+            }
+        }
+
+        PyArrayObject *arr_image = ref_image.reinterpret<PyArrayObject>();
+        if (PyArray_NDIM(arr_image) != 2) {
+            (void)PyErr_Format(PyExc_ValueError,
+                               "# dimensions of image must be 2, is %i",
+                               (int)PyArray_NDIM(arr_image));
+            return nullptr;
+        }
+
+        auto const original = NumpyArrayPhoto(arr_image);
+        auto const padded = make_padded_view(original, padding_value);
+        // FIXME: add periodic boundary conditions mode
+
+        // get output arrays
+        int const N = 1;
+        auto ref_area_data = np_make_new_vector(N, NPY_DOUBLE);
+        auto ref_peri_data = np_make_new_vector(N, NPY_DOUBLE);
+        auto ref_msm_data = std::vector<UniquePyPtr>(MAX_S + 1);
+        auto ref_imt_data = std::vector<UniquePyPtr>(MAX_S + 1);
+        for (int s = 2; s <= MAX_S; ++s) {
+            ref_msm_data[s] = np_make_new_vector(N, NPY_DOUBLE);
+            ref_imt_data[s] = np_make_new_vector(N, NPY_CDOUBLE);
+        }
+
+        {
+            MarchingSquaresFlags flags;
+            auto minkval = imt_interpolated_marching_squares(padded, threshold, flags);
+            int const label = 0;
+            np_set_double(ref_area_data, label, minkval.area());
+            np_set_double(ref_peri_data, label, minkval.perimeter());
+            for (int s = 2; s <= MAX_S; ++s) {
+                np_set_double(ref_msm_data[s], label, minkval.msm(s));
+                np_set_complex(ref_imt_data[s], label, minkval.imt(s));
+            }
+        }
+
+        // allocate the return dict and populate it
+        auto ref_return_dict = UniquePyPtr(PyDict_New());
+        auto move_item_to_dict = [&](string const &name, UniquePyPtr &ref) {
+            (void)PyDict_SetItemString(ref_return_dict.get(), name.c_str(),
+                                       ref.release());
+        };
+        move_item_to_dict("area", ref_area_data);
+        move_item_to_dict("perimeter", ref_peri_data);
+        for (int s = 2; s <= MAX_S; ++s) {
+            move_item_to_dict("q" + std::to_string(s), ref_msm_data[s]);
+            move_item_to_dict("psi" + std::to_string(s), ref_imt_data[s]);
+        }
+
+        return ref_return_dict.release();
+    }
+
     static PyMethodDef mymethods[] = {
         {"imt_for_polygon", (PyCFunction)wrap_imt_for_polygon,
          METH_VARARGS,
@@ -313,6 +428,12 @@ extern "C"
          "seed point, in\n"
          "input order.  If any cell is unbounded, its metrics will be NaN.\n"},
 #endif
+        {"imt_for_image", (PyCFunction)wrap_imt_for_image,
+         METH_VARARGS | METH_KEYWORDS,
+         "imt_for_image(image)\n"
+         "imt_for_image(seeds, threshold=value)\n"
+         "Returns a dictionary that contains the metrics.\n"
+         "The unit of scale is assumed to be 1 pixel.\n"},
         {nullptr, nullptr, 0, nullptr} // sentinel
     };
 
