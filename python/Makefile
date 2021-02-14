@@ -1,6 +1,6 @@
 # defaults
 CXXFLAGS += -g -O3 -std=c++11
-CXXFLAGS += -Wall -Werror
+CXXFLAGS += -Wall
 CXXFLAGS += -fPIC
 # set to "dll" for Windows
 SO_EXTENSION = so
