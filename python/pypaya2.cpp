@@ -347,14 +347,17 @@ namespace {
                 return nullptr;
         }
 
-        if (kwargs) {
-            // FIXME flag illegal kwargs
-
-            if (PyObject *threshold_arg = PyDict_GetItemString(kwargs, "threshold")) {
+        if (kwargs) for (auto key_and_value : Kwargs(kwargs))
+        {
+            if ("threshold" == key_and_value.first)
+            {
+                PyObject *threshold_arg = key_and_value.second;
                 threshold = PyFloat_AsDouble(threshold_arg);
 
                 if (threshold == -1. && PyErr_Occurred())
                     throw std::runtime_error ("error converting threshold kwarg");
+            } else {
+                // FIXME flag illegal kwargs
             }
         }
 
