@@ -60,6 +60,54 @@ static UniquePyPtr np_make_new_vector(int N, int datatype)
 }
 
 namespace {
+    struct MinkValReturnData
+    {
+        MinkValReturnData(int N, int MAX_S)
+        {
+            ref_area_data = np_make_new_vector(N, NPY_DOUBLE);
+            ref_peri_data = np_make_new_vector(N, NPY_DOUBLE);
+            ref_msm_data = std::vector<UniquePyPtr>(MAX_S + 1);
+            ref_imt_data = std::vector<UniquePyPtr>(MAX_S + 1);
+            for (int s = 2; s <= MAX_S; ++s) {
+                ref_msm_data[s] = np_make_new_vector(N, NPY_DOUBLE);
+                ref_imt_data[s] = np_make_new_vector(N, NPY_CDOUBLE);
+            }
+        }
+
+        UniquePyPtr ref_area_data;
+        UniquePyPtr ref_peri_data;
+        std::vector<UniquePyPtr> ref_msm_data;
+        std::vector<UniquePyPtr> ref_imt_data;
+
+        void assign(int index, MinkowskiAccumulator const &);
+        UniquePyPtr move_to_dict();
+    };
+
+    void MinkValReturnData::assign(int index, MinkowskiAccumulator const &minkval)
+    {
+        np_set_double(ref_area_data, index, minkval.area());
+        np_set_double(ref_peri_data, index, minkval.perimeter());
+        for (unsigned s = 2; s < ref_msm_data.size(); ++s) {
+            np_set_double(ref_msm_data[s], index, minkval.msm(s));
+            np_set_complex(ref_imt_data[s], index, minkval.imt(s));
+        }
+    }
+
+    UniquePyPtr MinkValReturnData::move_to_dict() {
+        auto ref_return_dict = UniquePyPtr(PyDict_New());
+        auto move_item_to_dict = [&](string const &name, UniquePyPtr &ref) {
+            (void)PyDict_SetItemString(ref_return_dict.get(), name.c_str(),
+                                       ref.release());
+        };
+        move_item_to_dict("area", ref_area_data);
+        move_item_to_dict("perimeter", ref_peri_data);
+        for (unsigned s = 2; s < ref_msm_data.size(); ++s) {
+            move_item_to_dict("q" + std::to_string(s), ref_msm_data[s]);
+            move_item_to_dict("psi" + std::to_string(s), ref_imt_data[s]);
+        }
+        return ref_return_dict;
+    }
+
     [[ noreturn ]]
     void throw_value_error(char const *format, ...)
     {
@@ -134,39 +182,9 @@ namespace {
                                 np_get_double(ref_vertices, i, 1)});
         }
 
-        // get output arrays
-        auto ref_area_data = np_make_new_vector(1, NPY_DOUBLE);
-        auto ref_peri_data = np_make_new_vector(1, NPY_DOUBLE);
-        auto ref_msm_data = std::vector<UniquePyPtr>(MAX_S + 1);
-        auto ref_imt_data = std::vector<UniquePyPtr>(MAX_S + 1);
-        for (int s = 2; s <= MAX_S; ++s) {
-            ref_msm_data[s] = np_make_new_vector(1, NPY_DOUBLE);
-            ref_imt_data[s] = np_make_new_vector(1, NPY_CDOUBLE);
-        }
-
-        // compute IMT
-        auto minkval = papaya2::imt_polygon(vertices);
-        np_set_double(ref_area_data, 0, minkval.area());
-        np_set_double(ref_peri_data, 0, minkval.perimeter());
-        for (int s = 2; s <= MAX_S; ++s) {
-            np_set_double(ref_msm_data[s], 0, minkval.msm(s));
-            np_set_complex(ref_imt_data[s], 0, minkval.imt(s));
-        }
-
-        // allocate the return dict and populate it
-        auto ref_return_dict = UniquePyPtr(PyDict_New());
-        auto move_item_to_dict = [&](string const &name, UniquePyPtr &ref) {
-            (void)PyDict_SetItemString(ref_return_dict.get(), name.c_str(),
-                                       ref.release());
-        };
-        move_item_to_dict("area", ref_area_data);
-        move_item_to_dict("perimeter", ref_peri_data);
-        for (int s = 2; s <= MAX_S; ++s) {
-            move_item_to_dict("q" + std::to_string(s), ref_msm_data[s]);
-            move_item_to_dict("psi" + std::to_string(s), ref_imt_data[s]);
-        }
-
-        return ref_return_dict.release();
+        auto return_data = MinkValReturnData(1, MAX_S);
+        return_data.assign(0, papaya2::imt_polygon(vertices));
+        return return_data.move_to_dict().release();
     }
 
 #ifdef HAVE_CGAL
@@ -239,15 +257,7 @@ namespace {
             throw_value_error("# dimensions must be 2, is %i", (int)PyArray_NDIM(arr_seeds));
         }
 
-        // get output arrays
-        auto ref_area_data = np_make_new_vector(N, NPY_DOUBLE);
-        auto ref_peri_data = np_make_new_vector(N, NPY_DOUBLE);
-        auto ref_msm_data = std::vector<UniquePyPtr>(MAX_S + 1);
-        auto ref_imt_data = std::vector<UniquePyPtr>(MAX_S + 1);
-        for (int s = 2; s <= MAX_S; ++s) {
-            ref_msm_data[s] = np_make_new_vector(N, NPY_DOUBLE);
-            ref_imt_data[s] = np_make_new_vector(N, NPY_CDOUBLE);
-        }
+        auto return_data = MinkValReturnData(N, MAX_S);
 
         // fill seed point coordinates into the Voronoi diagram
         for (int i = 0; i != N; ++i)
@@ -268,13 +278,7 @@ namespace {
 
                 // compute Minkowski valuations and copy them over
                 if (!fit->is_unbounded()) {
-                    auto const minkval = vd.minkval_for_cell(fit);
-                    np_set_double(ref_area_data, label, minkval.area());
-                    np_set_double(ref_peri_data, label, minkval.perimeter());
-                    for (int s = 2; s <= MAX_S; ++s) {
-                        np_set_double(ref_msm_data[s], label, minkval.msm(s));
-                        np_set_complex(ref_imt_data[s], label, minkval.imt(s));
-                    }
+                    return_data.assign(label, vd.minkval_for_cell(fit));
                 }
 
                 ++label;
@@ -283,20 +287,7 @@ namespace {
             }
         }
 
-        // allocate the return dict and populate it
-        auto ref_return_dict = UniquePyPtr(PyDict_New());
-        auto move_item_to_dict = [&](string const &name, UniquePyPtr &ref) {
-            (void)PyDict_SetItemString(ref_return_dict.get(), name.c_str(),
-                                       ref.release());
-        };
-        move_item_to_dict("area", ref_area_data);
-        move_item_to_dict("perimeter", ref_peri_data);
-        for (int s = 2; s <= MAX_S; ++s) {
-            move_item_to_dict("q" + std::to_string(s), ref_msm_data[s]);
-            move_item_to_dict("psi" + std::to_string(s), ref_imt_data[s]);
-        }
-
-        return ref_return_dict.release();
+        return return_data.move_to_dict().release();
     }
 #endif // HAVE_CGAL
 
@@ -375,41 +366,17 @@ namespace {
 
         // get output arrays
         int const N = 1;
-        auto ref_area_data = np_make_new_vector(N, NPY_DOUBLE);
-        auto ref_peri_data = np_make_new_vector(N, NPY_DOUBLE);
-        auto ref_msm_data = std::vector<UniquePyPtr>(MAX_S + 1);
-        auto ref_imt_data = std::vector<UniquePyPtr>(MAX_S + 1);
-        for (int s = 2; s <= MAX_S; ++s) {
-            ref_msm_data[s] = np_make_new_vector(N, NPY_DOUBLE);
-            ref_imt_data[s] = np_make_new_vector(N, NPY_CDOUBLE);
-        }
+
+        auto return_data = MinkValReturnData(N, MAX_S);
 
         {
             MarchingSquaresFlags flags;
             auto minkval = imt_interpolated_marching_squares(padded, threshold, flags);
             int const label = 0;
-            np_set_double(ref_area_data, label, minkval.area());
-            np_set_double(ref_peri_data, label, minkval.perimeter());
-            for (int s = 2; s <= MAX_S; ++s) {
-                np_set_double(ref_msm_data[s], label, minkval.msm(s));
-                np_set_complex(ref_imt_data[s], label, minkval.imt(s));
-            }
+            return_data.assign(label, minkval);
         }
 
-        // allocate the return dict and populate it
-        auto ref_return_dict = UniquePyPtr(PyDict_New());
-        auto move_item_to_dict = [&](string const &name, UniquePyPtr &ref) {
-            (void)PyDict_SetItemString(ref_return_dict.get(), name.c_str(),
-                                       ref.release());
-        };
-        move_item_to_dict("area", ref_area_data);
-        move_item_to_dict("perimeter", ref_peri_data);
-        for (int s = 2; s <= MAX_S; ++s) {
-            move_item_to_dict("q" + std::to_string(s), ref_msm_data[s]);
-            move_item_to_dict("psi" + std::to_string(s), ref_imt_data[s]);
-        }
-
-        return ref_return_dict.release();
+        return return_data.move_to_dict().release();
     }
 
     static PyMethodDef mymethods[] = {
