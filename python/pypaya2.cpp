@@ -189,12 +189,12 @@ namespace {
                 return nullptr;
         }
 
-        if (kwargs) {
-            // FIXME flag illegal kwargs
-
+        if (kwargs) for (auto key_and_value : Kwargs(kwargs))
+        {
             // if box argument is given, assume we want a periodic Voronoi
             // tessellation
-            if (PyObject *boxarg = PyDict_GetItemString(kwargs, "box")) {
+            if ("box" == key_and_value.first) {
+                PyObject *boxarg = key_and_value.second;
                 auto ref_box = UniquePyPtr(
                     PyArray_FROM_OTF(boxarg, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY));
                 PyArrayObject *arr_box = ref_box.reinterpret<PyArrayObject>();
@@ -222,6 +222,8 @@ namespace {
                     throw_value_error("box kwargs must be one-dimensional, is %i-dimensional",
                         (int)PyArray_NDIM(arr_box));
                 }
+            } else {
+                throw_value_error("illegal keyword argument: %s", key_and_value.first.c_str());
             }
         }
 
@@ -357,7 +359,7 @@ namespace {
                 if (threshold == -1. && PyErr_Occurred())
                     throw std::runtime_error ("error converting threshold kwarg");
             } else {
-                // FIXME flag illegal kwargs
+                throw_value_error("illegal keyword argument: %s", key_and_value.first.c_str());
             }
         }
 

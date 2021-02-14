@@ -54,10 +54,9 @@ class ImageTest(PypayaTestCase):
         with self.assertRaises(TypeError):
             pypaya2.imt_for_image()
 
-    # FIXME add check
-    #def test_kwargs(self):
-    #    with self.assertRaises(TypeError):
-    #        pypaya2.imt_for_image(self.mock_image(), not_really = 'acceptable')
+    def test_kwargs(self):
+        with self.assertRaises(ValueError):
+            pypaya2.imt_for_image(self.mock_image(), not_really = 'acceptable')
 
     def test_imt_for_image__bad_argument__vector(self):
         self.assert_raises_both_ways(ValueError, '# dimensions of image must be 2, is 1', [0, 1])
