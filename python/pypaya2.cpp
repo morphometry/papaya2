@@ -30,13 +30,11 @@ static void np_set_complex(UniquePyPtr &obj, int i, complex_t value)
     *reinterpret_cast<complex_t *>(PyArray_GETPTR1(arr, i)) = value;
 }
 
-#ifdef HAVE_CGAL
 static double np_get_double(UniquePyPtr &obj, int i)
 {
     auto arr = obj.reinterpret<PyArrayObject>();
     return *reinterpret_cast<double const *>(PyArray_GETPTR1(arr, i));
 }
-#endif // HAVE_CGAL
 
 static double np_get_double(UniquePyPtr &obj, int i, int j)
 {
