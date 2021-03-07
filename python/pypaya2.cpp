@@ -119,6 +119,27 @@ namespace {
         throw std::domain_error(buf);
     }
 
+    static std::vector<double> cast_to_vector(PyObject *obj, char const *argument_desc)
+    {
+        auto array_ref = UniquePyPtr(PyArray_FROM_OTF(obj, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY));
+        if (!array_ref)
+            throw_value_error("cannot cast data for %s argument", argument_desc);
+        PyArrayObject *np_array = array_ref.reinterpret<PyArrayObject>();
+        if (PyArray_NDIM(np_array) > 1) {
+            throw_value_error("cannot cast higher-dimensional array to vector for %s argument", argument_desc);
+        } else if (PyArray_NDIM(np_array) == 1) {
+            npy_intp *dimensions = PyArray_DIMS(np_array);
+            int const N = dimensions[0];
+            auto ret = std::vector<double> (N, 0.);
+            for (int i = 0; i != N; ++i)
+                ret.at(i) = np_get_double(array_ref, i);
+            return ret;
+        } else {
+            double const value = *static_cast<double const *>(PyArray_DATA(np_array));
+            return std::vector<double>(1, value);
+        }
+    }
+
     typedef PyObject *python_function(PyObject *, PyObject *, PyObject *);
 
     template <python_function FUNCTION>
@@ -327,7 +348,7 @@ namespace {
                                         PyObject *kwargs)
     {
         UniquePyPtr ref_image = nullptr;
-        double threshold = .5;
+        auto thresholds = std::vector<double>(1, .5);
         double padding_value = 0;
 
         {
@@ -342,13 +363,8 @@ namespace {
 
         if (kwargs) for (auto key_and_value : Kwargs(kwargs))
         {
-            if ("threshold" == key_and_value.first)
-            {
-                PyObject *threshold_arg = key_and_value.second;
-                threshold = PyFloat_AsDouble(threshold_arg);
-
-                if (threshold == -1. && PyErr_Occurred())
-                    throw std::runtime_error ("error converting threshold kwarg");
+            if ("threshold" == key_and_value.first) {
+                thresholds = cast_to_vector(key_and_value.second, "threshold");
             } else {
                 throw_value_error("illegal keyword argument: %s", key_and_value.first.c_str());
             }
@@ -365,15 +381,15 @@ namespace {
         // FIXME: add periodic boundary conditions mode
 
         // get output arrays
-        int const N = 1;
+        int const N = thresholds.size();
 
         auto return_data = MinkValReturnData(N, MAX_S);
 
+        for (int i = 0; i != N; ++i)
         {
             MarchingSquaresFlags flags;
-            auto minkval = imt_interpolated_marching_squares(padded, threshold, flags);
-            int const label = 0;
-            return_data.assign(label, minkval);
+            auto minkval = imt_interpolated_marching_squares(padded, thresholds.at(i), flags);
+            return_data.assign(i, minkval);
         }
 
         return return_data.move_to_dict().release();

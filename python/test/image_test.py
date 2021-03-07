@@ -50,6 +50,14 @@ class ImageTest(PypayaTestCase):
 
         self.assert_expected_values(minkval, accuracy = 1e-12)
 
+    def test_imt_for_image__multiple_thresholds(self):
+        image = self.image_fixture('potato.png')
+        minkval = pypaya2.imt_for_image(image, threshold = [1.469734492275599e+02, 127.5])
+
+        accuracy = 1e-12
+        self.assert_approx_equal(7.760018008530601e+04, minkval['area'][0], accuracy = accuracy)
+        self.assert_approx_equal(7.769601857760132e+04, minkval['area'][1], accuracy = accuracy)
+
     def test_imt_for_image__missing_argument(self):
         with self.assertRaises(TypeError):
             pypaya2.imt_for_image()
@@ -63,6 +71,16 @@ class ImageTest(PypayaTestCase):
 
     def test_imt_for_image__bad_argument__tensor(self):
         self.assert_raises_both_ways(ValueError, '# dimensions of image must be 2, is 3', [[[0, 1], [0, 1]], [[0, 1], [0, 1]]])
+
+    def test_imt_for_image__bad_argument__tensor_threshold(self):
+        with self.assertRaises(ValueError) as cm:
+            pypaya2.imt_for_image(self.mock_image(), threshold = np.eye(3))
+        self.assert_equal('cannot cast higher-dimensional array to vector for threshold argument', str(cm.exception))
+
+    def test_imt_for_image__bad_argument__string_threshold(self):
+        with self.assertRaises(ValueError) as cm:
+            pypaya2.imt_for_image(self.mock_image(), threshold = 'xyz')
+        self.assert_equal('cannot cast data for threshold argument', str(cm.exception))
 
     def test_pil__image_orientation(self):
         coords_test = self.image_fixture('coordinates.png')
