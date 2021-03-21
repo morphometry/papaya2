@@ -3,9 +3,13 @@ import unittest
 import pypaya2
 
 class PypayaTestCase(unittest.TestCase):
-    def assert_approx_equal(self, expected, actual):
-        if abs(expected - actual) / abs(expected) > 1e-14:
-            self.fail("expected {0} got {1}".format(expected, actual))
+    def assert_approx_equal(self, expected, actual, accuracy = 1e-14):
+        delta = expected - actual
+        if abs(delta) / abs(expected) > accuracy:
+            self.fail("expected {0} got {1} [delta = {2}]".format(expected, actual, delta))
+
+    def assert_equal(self, expected, actual):
+        self.assertEqual(expected, actual)
 
     def assert_sets_equal(self, expected, actual):
         expected = set(expected)

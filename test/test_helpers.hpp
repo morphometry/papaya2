@@ -27,8 +27,8 @@ struct CheckPositivelyOriented
     }
 };
 
-template <typename PHOTO>
-void check_msq_positively_oriented(const PHOTO &ph, MarchingSquaresFlags flags)
+template <typename PHOTO, typename FLAGS>
+void check_msq_positively_oriented(const PHOTO &ph, const FLAGS &flags)
 {
     CheckPositivelyOriented chk;
     trace_isocontour_interpolated_marching_squares(&chk, ph, .5, flags);

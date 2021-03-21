@@ -1,5 +1,6 @@
 #include "catch.hpp"
 #include <papaya2/tools.hpp>
+#include "test_helpers.hpp"
 
 using namespace papaya2;
 
@@ -44,6 +45,32 @@ TEST_CASE("vector operations", "[vector]")
         flt_array += x;
         CHECK(flt_array[0] == 1.5);
         CHECK(flt_array[1] == 3.5);
+    }
+}
+
+TEST_CASE("logspace [tools]")
+{
+    SECTION("including the endpoint")
+    {
+        auto sequence = logspace(1., 1000., 4, true);
+        CHECK(sequence[0] == approx(1e0));
+        CHECK(sequence[1] == approx(1e1));
+        CHECK(sequence[2] == approx(1e2));
+        CHECK(sequence[3] == approx(1e3));
+    }
+    SECTION("not including the endpoint")
+    {
+        auto sequence = logspace(1., 1000., 3, false);
+        CHECK(sequence[0] == approx(1e0));
+        CHECK(sequence[1] == approx(1e1));
+        CHECK(sequence[2] == approx(1e2));
+    }
+    SECTION("with just 1 level")
+    {
+        auto sequence = logspace(1234., 1234., 1, true);
+        CHECK(sequence[0] == approx(1234.));
+        sequence = logspace(1234., 2000., 1, true);
+        CHECK(sequence[0] == approx(1234.));
     }
 }
 

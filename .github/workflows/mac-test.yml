@@ -23,6 +23,8 @@ jobs:
         c++ --version
     - name: Install numpy
       run: pip install numpy
+    - name: Install Pillow
+      run: pip install pillow
     - name: Compile python3 module without CGAL
       run: |
         cd python

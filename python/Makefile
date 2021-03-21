@@ -1,6 +1,6 @@
 # defaults
 CXXFLAGS += -g -O3 -std=c++11
-CXXFLAGS += -Wall -Werror
+CXXFLAGS += -Wall
 CXXFLAGS += -fPIC
 # set to "dll" for Windows
 SO_EXTENSION = so
@@ -50,7 +50,7 @@ pypaya2.$(SO_EXTENSION): pypaya2.o
 
 non_cgal_test: pypaya2
 	cp -f pypaya2.$(SO_EXTENSION) test
-	(cd test; $(PYTHON) poly_test.py)
+	(cd test; $(PYTHON) poly_test.py; $(PYTHON) image_test.py)
 
 test: non_cgal_test
 	(cd test; $(PYTHON) pp_test.py)
