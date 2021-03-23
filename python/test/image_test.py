@@ -86,10 +86,17 @@ class ImageTest(PypayaTestCase):
         image = self.image_fixture('potato.png')
         self.assert_equal((302, 361), image.shape)
 
+        # compute Minkowski map
         minkmap = pypaya2.minkowski_map_for_image(image, threshold = 1.469734492275599e+02)
         import matplotlib.pyplot as plt
         import numpy as np
         plt.imshow(np.abs(minkmap[0]))
+        #plt.show()
+        # smooth over 10x10 pixel neighborhoods
+        import scipy.signal
+        block = np.ones([10,10])
+        smooth = scipy.signal.convolve2d(minkmap[0], block, boundary = 'fill')
+        plt.imshow(np.abs(smooth))
         plt.show()
 
     def test_pil__image_orientation(self):
