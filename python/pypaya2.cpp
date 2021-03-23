@@ -48,6 +48,14 @@ static double np_get_double(UniquePyPtr &obj, int i, int j)
     return *reinterpret_cast<double const *>(PyArray_GETPTR2(arr, i, j));
 }
 
+static void assign_nan(UniquePyPtr &array)
+{
+    static auto nan = UniquePyPtr(Py_BuildValue("d", NAN));
+    int ec = PyArray_FillWithScalar(array.reinterpret<PyArrayObject>(), nan.get());
+    if (ec != 0)
+        throw std::runtime_error("PyArray_FillWithScalar");
+}
+
 // make a new numpy array, 1D with length N, filled with NaN's
 static UniquePyPtr np_make_new_vector(int N, int datatype)
 {
@@ -55,11 +63,7 @@ static UniquePyPtr np_make_new_vector(int N, int datatype)
     auto ret = UniquePyPtr(PyArray_SimpleNew(1, dims, datatype));
     if (!ret)
         throw std::runtime_error("np_make_new_vector (1)");
-    auto nan = UniquePyPtr(Py_BuildValue("d", NAN));
-    int ec =
-        PyArray_FillWithScalar(ret.reinterpret<PyArrayObject>(), nan.get());
-    if (ec != 0)
-        throw std::runtime_error("np_make_new_vector (2)");
+    assign_nan(ret);
     return ret;
 }
 
@@ -69,10 +73,7 @@ static UniquePyPtr np_make_new_3d_array(int lx, int ly, int lz, int datatype)
     auto ret = UniquePyPtr(PyArray_SimpleNew(3, dims, datatype));
     if (!ret)
         throw std::runtime_error("np_make_new_3d_array (1)");
-    auto nan = UniquePyPtr(Py_BuildValue("d", NAN));
-    int ec = PyArray_FillWithScalar(ret.reinterpret<PyArrayObject>(), nan.get());
-    if (ec != 0)
-        throw std::runtime_error("np_make_new_3d_array (2)");
+    assign_nan(ret);
     return ret;
 }
 
