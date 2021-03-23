@@ -82,6 +82,16 @@ class ImageTest(PypayaTestCase):
             pypaya2.imt_for_image(self.mock_image(), threshold = 'xyz')
         self.assert_equal('cannot cast data for threshold argument', str(cm.exception))
 
+    def test_minkowski_map_for_image(self):
+        image = self.image_fixture('potato.png')
+        self.assert_equal((302, 361), image.shape)
+
+        minkmap = pypaya2.minkowski_map_for_image(image, threshold = 1.469734492275599e+02)
+        import matplotlib.pyplot as plt
+        import numpy as np
+        plt.imshow(np.abs(minkmap[0]))
+        plt.show()
+
     def test_pil__image_orientation(self):
         coords_test = self.image_fixture('coordinates.png')
         self.assert_equal((2, 3), coords_test.shape)

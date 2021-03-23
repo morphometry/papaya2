@@ -30,6 +30,12 @@ static void np_set_complex(UniquePyPtr &obj, int i, complex_t value)
     *reinterpret_cast<complex_t *>(PyArray_GETPTR1(arr, i)) = value;
 }
 
+static void np_set_complex(UniquePyPtr &obj, int i, int j, int k, complex_t value)
+{
+    auto arr = obj.reinterpret<PyArrayObject>();
+    *reinterpret_cast<complex_t *>(PyArray_GETPTR3(arr, i, j, k)) = value;
+}
+
 static double np_get_double(UniquePyPtr &obj, int i)
 {
     auto arr = obj.reinterpret<PyArrayObject>();
@@ -54,6 +60,19 @@ static UniquePyPtr np_make_new_vector(int N, int datatype)
         PyArray_FillWithScalar(ret.reinterpret<PyArrayObject>(), nan.get());
     if (ec != 0)
         throw std::runtime_error("np_make_new_vector (2)");
+    return ret;
+}
+
+static UniquePyPtr np_make_new_3d_array(int lx, int ly, int lz, int datatype)
+{
+    npy_intp dims[3] = {lx, ly, lz};
+    auto ret = UniquePyPtr(PyArray_SimpleNew(3, dims, datatype));
+    if (!ret)
+        throw std::runtime_error("np_make_new_3d_array (1)");
+    auto nan = UniquePyPtr(Py_BuildValue("d", NAN));
+    int ec = PyArray_FillWithScalar(ret.reinterpret<PyArrayObject>(), nan.get());
+    if (ec != 0)
+        throw std::runtime_error("np_make_new_3d_array (2)");
     return ret;
 }
 
@@ -393,6 +412,62 @@ namespace {
         return return_data.move_to_dict().release();
     }
 
+    static PyObject *compute_minkowski_map(PyObject *, PyObject *args,
+                                           PyObject *kwargs)
+    {
+        UniquePyPtr ref_image = nullptr;
+        auto thresholds = std::vector<double>(1, .5);
+        // TODO: Add periodic boundary conditions mode
+        double padding_value = 0;
+
+        {
+            PyObject *arg1 = nullptr;
+            if (!PyArg_ParseTuple(args, "O", &arg1, nullptr))
+                return nullptr;
+            ref_image = UniquePyPtr(
+                    PyArray_FROM_OTF(arg1, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY));
+            if (!ref_image)
+                return nullptr;
+        }
+
+        if (kwargs) {
+            for (auto key_and_value : Kwargs(kwargs)) {
+                if ("threshold" == key_and_value.first) {
+                    thresholds = cast_to_vector(key_and_value.second, "threshold");
+                } else {
+                    throw_value_error("illegal keyword argument: %s", key_and_value.first.c_str());
+                }
+            }
+        }
+
+        PyArrayObject *arr_image = ref_image.reinterpret<PyArrayObject>();
+        if (PyArray_NDIM(arr_image) != 2) {
+            throw_value_error("# dimensions of image must be 2, is %i",
+                              (int)PyArray_NDIM(arr_image));
+        }
+
+        auto const original = NumpyArrayPhoto(arr_image);
+        auto const padded = make_padded_view(original, padding_value);
+        UniquePyPtr np_array;
+
+        for (size_t t = 0; t != thresholds.size(); ++t)
+        {
+            complex_image_t mink_map;
+            minkowski_map_interpolated_marching_squares(&mink_map, padded, thresholds.front(), 2);
+
+            int const width = mink_map.width(), height = mink_map.height();
+            if(!np_array)
+                np_array = np_make_new_3d_array(thresholds.size(), width, height, NPY_CDOUBLE);
+            for(int j = 0; j != height; ++j) {
+                for(int i = 0; i != width; ++i) {
+                    np_set_complex(np_array, t, i, j, mink_map(i, j));
+                }
+            }
+        }
+
+        return np_array.release();
+    }
+
     static PyMethodDef mymethods[] = {
         {"imt_for_polygon", WRAP_IN_PARACHUTE(wrap_imt_for_polygon),
          METH_VARARGS,
@@ -420,6 +495,12 @@ namespace {
          "imt_for_image(seeds, threshold=value)\n"
          "Returns a dictionary that contains the metrics.\n"
          "The unit of scale is assumed to be 1 pixel.\n"},
+        {"minkowski_map_for_image", WRAP_IN_PARACHUTE(compute_minkowski_map),
+         METH_VARARGS | METH_KEYWORDS,
+         "minkowski_map_for_image(image)\n"
+         "minkowski_map_for_image(image, threshold)\n"
+         "Computes the psi_2 Minkowski map.\n"
+         "Returns a 3D array len(threshold) x (width-1) x (height-1) of complex numbers.\n"},
         {nullptr, nullptr, 0, nullptr} // sentinel
     };
 } // anonymous namespace
