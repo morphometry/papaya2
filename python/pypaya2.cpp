@@ -158,6 +158,19 @@ namespace {
         }
     }
 
+    static UniquePyPtr cast_to_2d_np_array(PyObject *object, char const *argument_desc) {
+        auto array_ref = UniquePyPtr(PyArray_FROM_OTF(object, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY));
+        if (!array_ref) {
+            throw_value_error("cannot cast data to 2D array for %s argument", argument_desc);
+        }
+        int const actual_dim = PyArray_NDIM(array_ref.reinterpret<PyArrayObject>());
+        if (actual_dim != 2) {
+            throw_value_error("# dimensions of %s must be 2, is %i",
+                              argument_desc, actual_dim);
+        }
+        return array_ref;
+    }
+
     typedef PyObject *python_function(PyObject *, PyObject *, PyObject *);
 
     template <python_function FUNCTION>
@@ -231,19 +244,14 @@ namespace {
                                                PyObject *kwargs)
     {
         UniquePyPtr ref_seeds = nullptr;
-        PyArrayObject *arr_seeds = nullptr;
         VoronoiDiagram vd;
         vd.periodic = false;
-        int N;
 
         {
             PyObject *arg1 = nullptr;
             if (!PyArg_ParseTuple(args, "O", &arg1, nullptr))
                 return nullptr;
-            ref_seeds = UniquePyPtr(
-                PyArray_FROM_OTF(arg1, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY));
-            if (!ref_seeds)
-                return nullptr;
+            ref_seeds = cast_to_2d_np_array(arg1, "seeds");
         }
 
         if (kwargs) for (auto key_and_value : Kwargs(kwargs))
@@ -284,18 +292,7 @@ namespace {
             }
         }
 
-        arr_seeds = ref_seeds.reinterpret<PyArrayObject>();
-        // make sure input has the correct dimensions
-        if (PyArray_NDIM(arr_seeds) == 2) {
-            npy_intp *dimensions = PyArray_DIMS(arr_seeds);
-            N = dimensions[0];
-            if (dimensions[1] != 2) {
-                throw_value_error("data must be 2D, is %i", (int)dimensions[1]);
-            }
-        } else {
-            throw_value_error("# dimensions must be 2, is %i", (int)PyArray_NDIM(arr_seeds));
-        }
-
+        int N = PyArray_DIMS(ref_seeds.reinterpret<PyArrayObject>())[0];
         auto return_data = MinkValReturnData(N, MAX_S);
 
         // fill seed point coordinates into the Voronoi diagram
@@ -361,7 +358,6 @@ namespace {
         }
     };
 
-
     static PyObject *wrap_imt_for_image(PyObject *, PyObject *args,
                                         PyObject *kwargs)
     {
@@ -373,10 +369,7 @@ namespace {
             PyObject *arg1 = nullptr;
             if (!PyArg_ParseTuple(args, "O", &arg1, nullptr))
                 return nullptr;
-            ref_image = UniquePyPtr(
-                PyArray_FROM_OTF(arg1, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY));
-            if (!ref_image)
-                return nullptr;
+            ref_image = cast_to_2d_np_array(arg1, "image");
         }
 
         if (kwargs) for (auto key_and_value : Kwargs(kwargs))
@@ -388,13 +381,7 @@ namespace {
             }
         }
 
-        PyArrayObject *arr_image = ref_image.reinterpret<PyArrayObject>();
-        if (PyArray_NDIM(arr_image) != 2) {
-            throw_value_error("# dimensions of image must be 2, is %i",
-                    (int)PyArray_NDIM(arr_image));
-        }
-
-        auto const original = NumpyArrayPhoto(arr_image);
+        auto const original = NumpyArrayPhoto(ref_image.reinterpret<PyArrayObject>());
         auto const padded = make_padded_view(original, padding_value);
         // FIXME: add periodic boundary conditions mode
 
@@ -425,10 +412,7 @@ namespace {
             PyObject *arg1 = nullptr;
             if (!PyArg_ParseTuple(args, "O", &arg1, nullptr))
                 return nullptr;
-            ref_image = UniquePyPtr(
-                    PyArray_FROM_OTF(arg1, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY));
-            if (!ref_image)
-                return nullptr;
+            ref_image = cast_to_2d_np_array(arg1, "image");
         }
 
         if (kwargs) {
@@ -441,13 +425,7 @@ namespace {
             }
         }
 
-        PyArrayObject *arr_image = ref_image.reinterpret<PyArrayObject>();
-        if (PyArray_NDIM(arr_image) != 2) {
-            throw_value_error("# dimensions of image must be 2, is %i",
-                              (int)PyArray_NDIM(arr_image));
-        }
-
-        auto const original = NumpyArrayPhoto(arr_image);
+        auto const original = NumpyArrayPhoto(ref_image.reinterpret<PyArrayObject>());
         auto const padded = make_padded_view(original, padding_value);
         UniquePyPtr np_array;
 
