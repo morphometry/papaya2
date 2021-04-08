@@ -83,21 +83,88 @@ class ImageTest(PypayaTestCase):
         self.assert_equal('cannot cast data for threshold argument', str(cm.exception))
 
     def test_minkowski_map_for_image(self):
-        image = self.image_fixture('potato.png')
-        self.assert_equal((302, 361), image.shape)
+        image = np.zeros(shape=(2, 3))
+        image[:, 1] = 1.
+        minkmap = pypaya2.minkowski_map_for_image(image, boundary='periodic')
+        self.assert_equal((1, 2, 3), minkmap.shape)
+        expected = [[-1, -1, 0]] * 2
+        self.assert_approx_equal(expected, minkmap[0], accuracy=1e-6)
 
-        # compute Minkowski map
-        minkmap = pypaya2.minkowski_map_for_image(image, threshold = 1.469734492275599e+02)
-        import matplotlib.pyplot as plt
-        import numpy as np
-        plt.imshow(np.abs(minkmap[0]))
-        #plt.show()
-        # smooth over 10x10 pixel neighborhoods
-        import scipy.signal
-        block = np.ones([10,10])
-        smooth = scipy.signal.convolve2d(minkmap[0], block, boundary = 'fill')
-        plt.imshow(np.abs(smooth))
-        plt.show()
+    def test_minkowski_map_for_image__padded__zeros(self):
+        image = self.mock_image()
+        self.assert_equal((3, 2), image.shape)
+        minkmap = pypaya2.minkowski_map_for_image(image, threshold=0.06)
+        self.assert_equal((1, 4, 3), minkmap.shape)
+        expected = [
+            [+0.00000000e+00+0.98994949j, +9.32903324e-01+0.41905818j, -2.87102621e-16-1.29299526j],
+            [-9.66685285e-01+0.29668091j, +0.00000000e+00+0.j,         -9.80555919e-01+0.22709318j],
+            [-7.27257400e-01-0.82072935j, +0.00000000e+00+0.j,         -9.85086818e-01-0.19900744j],
+            [-3.45420341e-16-0.56568542j, +6.70820393e-01-0.89442719j, +0.00000000e+00+1.27279221j]
+        ]
+        self.assert_approx_equal(expected, minkmap[0], accuracy=1e-6)
+
+    def test_minkowski_map_for_image__padded__padding_value(self):
+        image = self.mock_image()
+        self.assert_equal((3, 2), image.shape)
+        minkmap = pypaya2.minkowski_map_for_image(image, threshold=0.06, boundary=0.03)
+        self.assert_equal((1, 4, 3), minkmap.shape)
+        expected = [
+            [+0.00000000e+00+1.16464646j, 9.74244511e-01+0.26113419j, +2.99957962e-16-1.35089057j],
+            [-9.86423194e-01+0.18991693j, 0.00000000e+00+0.j,         -9.93416388e-01+0.13237905j],
+            [-8.30535726e-01-0.6564754j,  0.00000000e+00+0.j,         -9.94880423e-01-0.11675958j],
+            [-1.79439138e-16-0.80812204j, 8.03748429e-01-0.7037892j,  +0.00000000e+00+1.33978127j]
+        ]
+        self.assert_approx_equal(expected, minkmap[0], accuracy=1e-6)
+
+    def test_minkowski_map_for_image__periodic(self):
+        image = self.mock_image()
+        self.assert_equal((3, 2), image.shape)
+        minkmap = pypaya2.minkowski_map_for_image(image, threshold=0.6, boundary='periodic')
+        self.assert_equal((1, 3, 2), minkmap.shape)
+        expected = [
+            [-0.07027819-0.31234752j, -0.07027819+0.31234752j],
+            [+0.00000000+0.j,         +0.00000000+0.j],
+            [-0.94135745+0.39223227j, -0.94135745-0.39223227j]
+        ]
+        self.assert_approx_equal(expected, minkmap[0], accuracy=1e-6)
+
+    def test_minkowski_map_for_image__multi_threshold(self):
+        image = self.mock_image()
+        self.assert_equal((3, 2), image.shape)
+        minkmap = pypaya2.minkowski_map_for_image(image, threshold=[0.6, 1.1], boundary='periodic')
+        self.assert_equal((2, 3, 2), minkmap.shape)
+        expected = [
+            [-0.07027819-0.31234752j, -0.07027819+0.31234752j],
+            [+0.00000000+0.j,         +0.00000000+0.j],
+            [-0.94135745+0.39223227j, -0.94135745-0.39223227j]
+        ]
+        self.assert_approx_equal(expected, minkmap[0], accuracy=1e-6)
+        expected = np.zeros(shape=(3, 2))
+        self.assert_approx_equal(expected, minkmap[1], accuracy=1e-6)
+
+    def test_minkowski_map_for_image__bad_threshold_argument(self):
+        with self.assertRaises(ValueError) as cm:
+            pypaya2.minkowski_map_for_image(self.mock_image(), threshold='nonsense')
+        self.assert_equal('cannot cast data for threshold argument', str(cm.exception))
+        with self.assertRaises(ValueError) as cm:
+            pypaya2.minkowski_map_for_image(self.mock_image(), threshold=ValueError())
+        self.assert_equal('cannot cast data for threshold argument', str(cm.exception))
+
+    def test_minkowski_map_for_image__bad_boundary_argument(self):
+        with self.assertRaises(ValueError) as cm:
+            pypaya2.minkowski_map_for_image(self.mock_image(), boundary='nonsense')
+        self.assert_equal('illegal value for boundary keyword argument: nonsense', str(cm.exception))
+        with self.assertRaises(ValueError) as cm:
+            pypaya2.minkowski_map_for_image(self.mock_image(), boundary=ValueError())
+        self.assert_equal('cannot cast data for boundary argument', str(cm.exception))
+        with self.assertRaises(ValueError) as cm:
+            pypaya2.minkowski_map_for_image(self.mock_image(), boundary=[1., 2.])
+        self.assert_equal("illegal value for boundary keyword argument, must be a Float or the string 'periodic'", str(cm.exception))
+
+    def test_minkowski_map_for_image__bad_keyword_argument(self):
+        with self.assertRaises(ValueError) as cm:
+            pypaya2.minkowski_map_for_image(self.mock_image(), no_such='argument')
+        self.assert_equal('illegal keyword argument: no_such', str(cm.exception))
 
     def test_pil__image_orientation(self):
         coords_test = self.image_fixture('coordinates.png')
@@ -120,7 +187,10 @@ class ImageTest(PypayaTestCase):
         self.assert_equal(60.,  coords_test[1,2])
 
     def mock_image(self):
-        return np.eye(2)
+        return np.transpose([
+            [0.2, 0.4, 0.1],
+            [0.7, 0.3, 0.6],
+        ])
 
     def image_fixture(self, name):
         pil_image = Image.open('../../test/validation_data/' + name)
