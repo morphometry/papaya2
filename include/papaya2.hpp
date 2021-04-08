@@ -105,7 +105,7 @@ template <typename TYPE> struct BasicPhoto
     {
         if (i < 0 || i >= width() || j < 0 || j >= height())
             throw std::range_error("invalid pixel index in BasicPhoto");
-        return size_t(j + 1) * size_t(width() + 1) + size_t(i) + 1u;
+        return size_t(j + 1) * size_t(width() + 2) + size_t(i) + 1u;
     }
 
     TYPE &at(int i, int j) { return data[pixel_index(i, j)]; }
