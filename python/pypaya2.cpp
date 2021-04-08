@@ -405,8 +405,8 @@ namespace {
     {
         UniquePyPtr ref_image = nullptr;
         auto thresholds = std::vector<double>(1, .5);
-        // TODO: Add periodic boundary conditions mode
         double padding_value = 0;
+        double periodic = false;
 
         {
             PyObject *arg1 = nullptr;
@@ -419,6 +419,29 @@ namespace {
             for (auto key_and_value : Kwargs(kwargs)) {
                 if ("threshold" == key_and_value.first) {
                     thresholds = cast_to_vector(key_and_value.second, "threshold");
+                } else if ("boundary" == key_and_value.first) {
+                    string v;
+                    bool is_string = false;
+                    try {
+                        v = to_utf8_string(key_and_value.second);
+                        is_string = true;
+                    } catch(std::logic_error const &) {
+                        // not a string
+                    }
+
+                    if (is_string)
+                    {
+                        if (v != "periodic") {
+                            throw_value_error("illegal value for boundary keyword argument: %s", v.c_str());
+                        } else {
+                            periodic = true;
+                        }
+                    } else {
+                        auto padding = cast_to_vector(key_and_value.second, "boundary");
+                        if (padding.size() != 1u)
+                            throw_value_error("illegal value for boundary keyword argument, must be a Float or the string 'periodic'");
+                        padding_value = padding[0];
+                    }
                 } else {
                     throw_value_error("illegal keyword argument: %s", key_and_value.first.c_str());
                 }
@@ -426,20 +449,20 @@ namespace {
         }
 
         auto const original = NumpyArrayPhoto(ref_image.reinterpret<PyArrayObject>());
-        auto const padded = make_padded_view(original, padding_value);
+        auto const padded = periodic ? make_periodic_view(original) : make_padded_view(original, padding_value);
         UniquePyPtr np_array;
 
         for (size_t t = 0; t != thresholds.size(); ++t)
         {
             complex_image_t mink_map;
-            minkowski_map_interpolated_marching_squares(&mink_map, padded, thresholds.front(), 2);
+            minkowski_map_interpolated_marching_squares(&mink_map, padded, thresholds.at(t), 2);
 
-            int const width = mink_map.width(), height = mink_map.height();
+            int const width = mink_map.width() - periodic, height = mink_map.height() - periodic;
             if(!np_array)
                 np_array = np_make_new_3d_array(thresholds.size(), width, height, NPY_CDOUBLE);
             for(int j = 0; j != height; ++j) {
                 for(int i = 0; i != width; ++i) {
-                    np_set_complex(np_array, t, i, j, mink_map(i, j));
+                    np_set_complex(np_array, t, i, j, mink_map(i + periodic, j + periodic));
                 }
             }
         }
@@ -478,8 +501,16 @@ namespace {
          METH_VARARGS | METH_KEYWORDS,
          "minkowski_map_for_image(image)\n"
          "minkowski_map_for_image(image, threshold)\n"
+         "minkowski_map_for_image(image, threshold, boundary = 0.4)\n"
          "Computes the psi_2 Minkowski map.\n"
-         "Returns a 3D array len(threshold) x (width-1) x (height-1) of complex numbers.\n"},
+         "Returns a 3D array len(threshold) x (width+1) x (height+1) of complex numbers.\n"
+         "Optionally, the value of the padding pixel can be specified.\n"
+         "minkowski_map_for_image(image, threshold, boundary = 'periodic')\n"
+         "Computes the psi_2 Minkowski map with periodic boundary conditions.\n"
+         "Returns a 3D array len(threshold) x width x height of complex numbers.\n"
+         "The first pixel, at index (0, 0), corresponds to the physical coordinate (1, 1),\n"
+         "i.e., the neighborhood composed of the pixels (0, 0), (0, 1), (1, 0), and (1, 1).\n"
+        },
         {nullptr, nullptr, 0, nullptr} // sentinel
     };
 } // anonymous namespace
