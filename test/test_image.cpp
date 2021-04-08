@@ -113,6 +113,45 @@ TEST_CASE("padded_view")
         for (int i = -1; i != 6; ++i)
             CHECK_THROWS_AS(padded(i, 4), std::range_error);
     }
+
+    SECTION("periodic boundary conditions")
+    {
+        REQUIRE(ph.origin() == vec_t{0., 0.});
+        REQUIRE(ph.upper_right() == vec_t{9., 4.});
+        auto padded = make_periodic_view(ph);
+        CHECK(padded.width() == 5);
+        CHECK(padded.height() == 4);
+        CHECK(padded.origin() == vec_t{-3., -2.});
+        CHECK(padded.upper_right() == vec_t{12., 6.});
+        for (int i = -1; i != 6; ++i)
+            CHECK_THROWS_AS(padded(i, -1), std::range_error);
+        CHECK(padded(0, 0) == 0.6);
+        CHECK(padded(1, 0) == 0.7);
+        CHECK(padded(2, 0) == 0.3);
+        CHECK(padded(3, 0) == 0.6);
+        CHECK(padded(4, 0) == 0.7);
+        CHECK_THROWS_AS(padded(-1, 1), std::range_error);
+        CHECK(padded(0, 1) == 0.1);
+        CHECK(padded(1, 1) == 0.2);
+        CHECK(padded(2, 1) == 0.4);
+        CHECK(padded(3, 1) == 0.1);
+        CHECK(padded(4, 1) == 0.2);
+        CHECK_THROWS_AS(padded(5, 1), std::range_error);
+        CHECK_THROWS_AS(padded(-1, 1), std::range_error);
+        CHECK(padded(0, 2) == 0.6);
+        CHECK(padded(1, 2) == 0.7);
+        CHECK(padded(2, 2) == 0.3);
+        CHECK(padded(3, 2) == 0.6);
+        CHECK(padded(4, 2) == 0.7);
+        CHECK_THROWS_AS(padded(5, 2), std::range_error);
+        CHECK(padded(0, 3) == 0.1);
+        CHECK(padded(1, 3) == 0.2);
+        CHECK(padded(2, 3) == 0.4);
+        CHECK(padded(3, 3) == 0.1);
+        CHECK(padded(4, 3) == 0.2);
+        for (int i = -1; i != 6; ++i)
+            CHECK_THROWS_AS(padded(i, 4), std::range_error);
+    }
 }
 
 TEST_CASE("marching squares algorithm")
