@@ -176,6 +176,8 @@ template <typename PHOTO> struct PaddingAdapter : PhotoAdapter<PHOTO>
 
     double operator()(int i, int j) const
     {
+        if (i < 0 || i >= width() || j < 0 || j >= height())
+            throw std::range_error("invalid pixel index in PaddingAdapter");
         if (i == 0 || j == 0)
             return padding_value;
         if (i == original.width() + 1 || j == original.height() + 1)

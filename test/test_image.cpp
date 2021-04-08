@@ -70,6 +70,51 @@ struct TestPhoto : BasicPhoto<int>
     }
 };
 
+TEST_CASE("padded_view")
+{
+    Photo ph;
+    ph.set_coordinates(0., 0., 9., 4., 3, 2);
+    ph(0,0) = 0.2;
+    ph(1,0) = 0.4;
+    ph(2,0) = 0.1;
+    ph(0,1) = 0.7;
+    ph(1,1) = 0.3;
+    ph(2,1) = 0.6;
+
+    SECTION("padding value")
+    {
+        REQUIRE(ph.origin() == vec_t{0., 0.});
+        REQUIRE(ph.upper_right() == vec_t{9., 4.});
+        auto padded = make_padded_view(ph, 0.9);
+        CHECK(padded.width() == 5);
+        CHECK(padded.height() == 4);
+        CHECK(padded.origin() == vec_t{-3., -2.});
+        CHECK(padded.upper_right() == vec_t{12., 6.});
+        for (int i = -1; i != 6; ++i)
+            CHECK_THROWS_AS(padded(i, -1), std::range_error);
+        for (int i = 0; i != 5; ++i)
+            CHECK(padded(i, 0) == 0.9);
+        CHECK_THROWS_AS(padded(-1, 1), std::range_error);
+        CHECK(padded(0, 1) == 0.9);
+        CHECK(padded(1, 1) == 0.2);
+        CHECK(padded(2, 1) == 0.4);
+        CHECK(padded(3, 1) == 0.1);
+        CHECK(padded(4, 1) == 0.9);
+        CHECK_THROWS_AS(padded(5, 1), std::range_error);
+        CHECK_THROWS_AS(padded(-1, 1), std::range_error);
+        CHECK(padded(0, 2) == 0.9);
+        CHECK(padded(1, 2) == 0.7);
+        CHECK(padded(2, 2) == 0.3);
+        CHECK(padded(3, 2) == 0.6);
+        CHECK(padded(4, 2) == 0.9);
+        CHECK_THROWS_AS(padded(5, 2), std::range_error);
+        for (int i = 0; i != 5; ++i)
+            CHECK(padded(i, 3) == 0.9);
+        for (int i = -1; i != 6; ++i)
+            CHECK_THROWS_AS(padded(i, 4), std::range_error);
+    }
+}
+
 TEST_CASE("marching squares algorithm")
 {
     // volumes of all the 16 configs at the reference threshold
