@@ -28,7 +28,8 @@ jobs:
     - name: Compile python3 module without CGAL
       run: |
         cd python
-        make non_cgal_test clean
+        make non_cgal_test
+        make clean
     - name: Compile demos without libraries
       run: |
         cd demos
@@ -48,4 +49,5 @@ jobs:
       run: |
         cd python
         cp ../demos/features.mk .
-        make test clean
+        make test
+        make clean
