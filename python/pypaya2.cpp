@@ -400,13 +400,14 @@ namespace {
         return return_data.move_to_dict().release();
     }
 
-    static PyObject *compute_minkowski_map(PyObject *, PyObject *args,
+      static PyObject *compute_minkowski_map(PyObject *, PyObject *args,
                                            PyObject *kwargs)
     {
         UniquePyPtr ref_image = nullptr;
         auto thresholds = std::vector<double>(1, .5);
         double padding_value = 0;
         double periodic = false;
+        int s = 2;
 
         {
             PyObject *arg1 = nullptr;
@@ -442,6 +443,9 @@ namespace {
                             throw_value_error("illegal value for boundary keyword argument, must be a Float or the string 'periodic'");
                         padding_value = padding[0];
                     }
+                } else if ("s" == key_and_value.first) {
+                    auto tmp = cast_to_vector(key_and_value.second, "s");
+                    s = tmp[0];
                 } else {
                     throw_value_error("illegal keyword argument: %s", key_and_value.first.c_str());
                 }
@@ -455,7 +459,7 @@ namespace {
         for (size_t t = 0; t != thresholds.size(); ++t)
         {
             complex_image_t mink_map;
-            minkowski_map_interpolated_marching_squares(&mink_map, padded, thresholds.at(t), 2);
+            minkowski_map_interpolated_marching_squares(&mink_map, padded, thresholds.at(t), s);
 
             int const width = mink_map.width() - periodic, height = mink_map.height() - periodic;
             if(!np_array)
