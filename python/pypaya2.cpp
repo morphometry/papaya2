@@ -445,6 +445,16 @@ namespace {
                     }
                 } else if ("s" == key_and_value.first) {
                     auto tmp = cast_to_vector(key_and_value.second, "s");
+                    if (tmp.size() != 1u)
+                        throw_value_error("illegal value for s argument, must be a single int value");
+                    else if (ceilf(tmp[0]) != tmp[0])
+                        throw_value_error("illegal value for s argument, s has to be an int");
+                    else if (tmp[0] < 0)
+                        throw_value_error("illegal value for s argument, s has to be a non-negative int");
+                    else if (tmp[0] == 1)
+                        throw_value_error("illegal value for s argument, s cannot be 1");
+                    else if (tmp[0] > MAX_S)
+                        throw_value_error("illegal value for s argument, s needs to be smaller than MAX_S");
                     s = tmp[0];
                 } else {
                     throw_value_error("illegal keyword argument: %s", key_and_value.first.c_str());
