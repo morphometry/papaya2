@@ -2,7 +2,6 @@
 // we're not using Boost::Python here as we export very few
 // functions and Boost::Python::Numpy is not in Debian.
 // 2019-2020 Sebastian Kapfer <sebastian.kapfer@fau.de>
-// TODO: Extract common code between the two functions
 // TODO: Add test coverage for the pointpattern analysis
 
 #include <papaya2.hpp>
