@@ -95,15 +95,15 @@ class ImageTest(PypayaTestCase):
         image[:, 1] = 1.
         with self.assertRaises(ValueError) as cm:
           minkmap = pypaya2.minkowski_map_for_image(image, boundary='periodic', s = [0,2])
-        self.assert_equal('illegal value for s argument, must be a single int value', str(cm.exception))
+        self.assert_equal('illegal value for s argument, must be a single integer', str(cm.exception))
 
         with self.assertRaises(ValueError) as cm:
           minkmap = pypaya2.minkowski_map_for_image(image, boundary='periodic', s = 0.67)
-        self.assert_equal('illegal value for s argument, s has to be an int', str(cm.exception))
+        self.assert_equal('illegal value for s argument, s must be an integer', str(cm.exception))
 
         with self.assertRaises(ValueError) as cm:
           minkmap = pypaya2.minkowski_map_for_image(image, boundary='periodic', s = -1)
-        self.assert_equal('illegal value for s argument, s has to be a non-negative int', str(cm.exception))
+        self.assert_equal('illegal value for s argument, s must be a non-negative integer', str(cm.exception))
 
         minkmap = pypaya2.minkowski_map_for_image(image, boundary='periodic', s = 0)
         self.assert_equal((1, 2, 3), minkmap.shape)
@@ -124,9 +124,14 @@ class ImageTest(PypayaTestCase):
         expected = [[0+1j, 0-1j, 0]] * 2
         self.assert_approx_equal(expected, minkmap[0], accuracy=1e-6)
 
+        minkmap = pypaya2.minkowski_map_for_image(image, boundary='periodic', s = 12)
+        self.assert_equal((1, 2, 3), minkmap.shape)
+        expected = [[1., 1., 0.], [1., 1., 0.]]
+        self.assert_approx_equal(expected, minkmap[0], accuracy=1e-6)
+
         with self.assertRaises(ValueError) as cm:
           minkmap = pypaya2.minkowski_map_for_image(image, boundary='periodic', s = 67)
-        self.assert_equal('illegal value for s argument, s needs to be smaller than MAX_S', str(cm.exception))
+        self.assert_equal('illegal value for s argument, s needs to be smaller than 13', str(cm.exception))
 
     def test_minkowski_map_for_image__padded__zeros(self):
         image = self.mock_image()
