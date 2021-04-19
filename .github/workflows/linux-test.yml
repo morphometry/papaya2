@@ -15,7 +15,8 @@ jobs:
     - name: Compile python3 module without CGAL
       run: |
         cd python
-        make non_cgal_test clean
+        make non_cgal_test
+        make clean
     - name: Compile and run test suite with clang 10
       run: test/with clang++-10
     - name: Compile and run test suite with clang 7
@@ -35,4 +36,5 @@ jobs:
     - name: Compile python3 module with CGAL
       run: |
         cd python
-        make test clean
+        make test
+        make clean

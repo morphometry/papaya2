@@ -32,8 +32,14 @@ Performing Voronoi-Minkowski analysis of a point pattern:
     minkval = pypaya2.imt_for_pointpattern(seeds)
     print(minkval['psi2'])
 
-There is currently no support for image analysis.  Please look to the
-demos folder at the toplevel if you need that.
+Computing the Minkowski tensors of an image, assumed to be a 2D array:
+
+    minkval = pypaya2.imt_for_image(image)
+    print(minkval['psi2'])
+
+    minkval = pypaya2.imt_for_image(image, threshold=[1, 3, 10, 30])
+    print(minkval['psi2'])
+
 
 ## Running the tests
 

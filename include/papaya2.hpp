@@ -105,7 +105,7 @@ template <typename TYPE> struct BasicPhoto
     {
         if (i < 0 || i >= width() || j < 0 || j >= height())
             throw std::range_error("invalid pixel index in BasicPhoto");
-        return size_t(j + 1) * size_t(width() + 1) + size_t(i) + 1u;
+        return size_t(j + 1) * size_t(width() + 2) + size_t(i) + 1u;
     }
 
     TYPE &at(int i, int j) { return data[pixel_index(i, j)]; }
@@ -167,19 +167,38 @@ auto make_thresholded_view(const PHOTO &p, const THRESHOLD &t)
 // do not use directly, use make_padded_view.
 template <typename PHOTO> struct PaddingAdapter : PhotoAdapter<PHOTO>
 {
+    struct PeriodicTag {};
     using PhotoAdapter<PHOTO>::original;
     double const padding_value;
+    bool const periodic;
 
     PaddingAdapter(const PHOTO &ph, double pv)
-        : PhotoAdapter<PHOTO>(ph), padding_value(pv)
+        : PhotoAdapter<PHOTO>(ph), padding_value(pv), periodic(false)
+    {}
+
+    PaddingAdapter(const PHOTO &ph, PeriodicTag)
+            : PhotoAdapter<PHOTO>(ph), padding_value(NAN), periodic(true)
     {}
 
     double operator()(int i, int j) const
     {
-        if (i == 0 || j == 0)
-            return padding_value;
-        if (i == original.width() + 1 || j == original.height() + 1)
-            return padding_value;
+        if (i < 0 || i >= width() || j < 0 || j >= height())
+            throw std::range_error("invalid pixel index in PaddingAdapter");
+        if (periodic) {
+            if (i == 0)
+                i += original.width();
+            else if (i == original.width() + 1)
+                i -= original.width();
+            if (j == 0)
+                j += original.height();
+            else if (j == original.height() + 1)
+                j -= original.height();
+        } else {
+            if (i == 0 || j == 0)
+                return padding_value;
+            if (i == original.width() + 1 || j == original.height() + 1)
+                return padding_value;
+        }
         return double(original(i - 1, j - 1));
     }
 
@@ -206,6 +225,12 @@ template <typename PHOTO>
 auto make_padded_view(const PHOTO &p, double pv) -> PaddingAdapter<PHOTO>
 {
     return PaddingAdapter<PHOTO>(p, pv);
+}
+
+template <typename PHOTO>
+auto make_periodic_view(const PHOTO &p) -> PaddingAdapter<PHOTO>
+{
+    return PaddingAdapter<PHOTO>(p, typename PaddingAdapter<PHOTO>::PeriodicTag());
 }
 
 template <typename TYPE, typename PHOTO>

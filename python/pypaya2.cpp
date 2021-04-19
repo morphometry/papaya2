@@ -2,7 +2,6 @@
 // we're not using Boost::Python here as we export very few
 // functions and Boost::Python::Numpy is not in Debian.
 // 2019-2020 Sebastian Kapfer <sebastian.kapfer@fau.de>
-// TODO: Extract common code between the two functions
 // TODO: Add test coverage for the pointpattern analysis
 
 #include <papaya2.hpp>
@@ -30,6 +29,12 @@ static void np_set_complex(UniquePyPtr &obj, int i, complex_t value)
     *reinterpret_cast<complex_t *>(PyArray_GETPTR1(arr, i)) = value;
 }
 
+static void np_set_complex(UniquePyPtr &obj, int i, int j, int k, complex_t value)
+{
+    auto arr = obj.reinterpret<PyArrayObject>();
+    *reinterpret_cast<complex_t *>(PyArray_GETPTR3(arr, i, j, k)) = value;
+}
+
 static double np_get_double(UniquePyPtr &obj, int i)
 {
     auto arr = obj.reinterpret<PyArrayObject>();
@@ -42,6 +47,14 @@ static double np_get_double(UniquePyPtr &obj, int i, int j)
     return *reinterpret_cast<double const *>(PyArray_GETPTR2(arr, i, j));
 }
 
+static void assign_nan(UniquePyPtr &array)
+{
+    static auto nan = UniquePyPtr(Py_BuildValue("d", NAN));
+    int ec = PyArray_FillWithScalar(array.reinterpret<PyArrayObject>(), nan.get());
+    if (ec != 0)
+        throw std::runtime_error("PyArray_FillWithScalar");
+}
+
 // make a new numpy array, 1D with length N, filled with NaN's
 static UniquePyPtr np_make_new_vector(int N, int datatype)
 {
@@ -49,11 +62,17 @@ static UniquePyPtr np_make_new_vector(int N, int datatype)
     auto ret = UniquePyPtr(PyArray_SimpleNew(1, dims, datatype));
     if (!ret)
         throw std::runtime_error("np_make_new_vector (1)");
-    auto nan = UniquePyPtr(Py_BuildValue("d", NAN));
-    int ec =
-        PyArray_FillWithScalar(ret.reinterpret<PyArrayObject>(), nan.get());
-    if (ec != 0)
-        throw std::runtime_error("np_make_new_vector (2)");
+    assign_nan(ret);
+    return ret;
+}
+
+static UniquePyPtr np_make_new_3d_array(int lx, int ly, int lz, int datatype)
+{
+    npy_intp dims[3] = {lx, ly, lz};
+    auto ret = UniquePyPtr(PyArray_SimpleNew(3, dims, datatype));
+    if (!ret)
+        throw std::runtime_error("np_make_new_3d_array (1)");
+    assign_nan(ret);
     return ret;
 }
 
@@ -138,6 +157,19 @@ namespace {
         }
     }
 
+    static UniquePyPtr cast_to_2d_np_array(PyObject *object, char const *argument_desc) {
+        auto array_ref = UniquePyPtr(PyArray_FROM_OTF(object, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY));
+        if (!array_ref) {
+            throw_value_error("cannot cast data to 2D array for %s argument", argument_desc);
+        }
+        int const actual_dim = PyArray_NDIM(array_ref.reinterpret<PyArrayObject>());
+        if (actual_dim != 2) {
+            throw_value_error("# dimensions of %s must be 2, is %i",
+                              argument_desc, actual_dim);
+        }
+        return array_ref;
+    }
+
     typedef PyObject *python_function(PyObject *, PyObject *, PyObject *);
 
     template <python_function FUNCTION>
@@ -211,19 +243,14 @@ namespace {
                                                PyObject *kwargs)
     {
         UniquePyPtr ref_seeds = nullptr;
-        PyArrayObject *arr_seeds = nullptr;
         VoronoiDiagram vd;
         vd.periodic = false;
-        int N;
 
         {
             PyObject *arg1 = nullptr;
             if (!PyArg_ParseTuple(args, "O", &arg1, nullptr))
                 return nullptr;
-            ref_seeds = UniquePyPtr(
-                PyArray_FROM_OTF(arg1, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY));
-            if (!ref_seeds)
-                return nullptr;
+            ref_seeds = cast_to_2d_np_array(arg1, "seeds");
         }
 
         if (kwargs) for (auto key_and_value : Kwargs(kwargs))
@@ -264,18 +291,7 @@ namespace {
             }
         }
 
-        arr_seeds = ref_seeds.reinterpret<PyArrayObject>();
-        // make sure input has the correct dimensions
-        if (PyArray_NDIM(arr_seeds) == 2) {
-            npy_intp *dimensions = PyArray_DIMS(arr_seeds);
-            N = dimensions[0];
-            if (dimensions[1] != 2) {
-                throw_value_error("data must be 2D, is %i", (int)dimensions[1]);
-            }
-        } else {
-            throw_value_error("# dimensions must be 2, is %i", (int)PyArray_NDIM(arr_seeds));
-        }
-
+        int N = PyArray_DIMS(ref_seeds.reinterpret<PyArrayObject>())[0];
         auto return_data = MinkValReturnData(N, MAX_S);
 
         // fill seed point coordinates into the Voronoi diagram
@@ -341,7 +357,6 @@ namespace {
         }
     };
 
-
     static PyObject *wrap_imt_for_image(PyObject *, PyObject *args,
                                         PyObject *kwargs)
     {
@@ -353,10 +368,7 @@ namespace {
             PyObject *arg1 = nullptr;
             if (!PyArg_ParseTuple(args, "O", &arg1, nullptr))
                 return nullptr;
-            ref_image = UniquePyPtr(
-                PyArray_FROM_OTF(arg1, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY));
-            if (!ref_image)
-                return nullptr;
+            ref_image = cast_to_2d_np_array(arg1, "image");
         }
 
         if (kwargs) for (auto key_and_value : Kwargs(kwargs))
@@ -368,13 +380,7 @@ namespace {
             }
         }
 
-        PyArrayObject *arr_image = ref_image.reinterpret<PyArrayObject>();
-        if (PyArray_NDIM(arr_image) != 2) {
-            throw_value_error("# dimensions of image must be 2, is %i",
-                    (int)PyArray_NDIM(arr_image));
-        }
-
-        auto const original = NumpyArrayPhoto(arr_image);
+        auto const original = NumpyArrayPhoto(ref_image.reinterpret<PyArrayObject>());
         auto const padded = make_padded_view(original, padding_value);
         // FIXME: add periodic boundary conditions mode
 
@@ -391,6 +397,90 @@ namespace {
         }
 
         return return_data.move_to_dict().release();
+    }
+
+      static PyObject *compute_minkowski_map(PyObject *, PyObject *args,
+                                           PyObject *kwargs)
+    {
+        UniquePyPtr ref_image = nullptr;
+        auto thresholds = std::vector<double>(1, .5);
+        double padding_value = 0;
+        double periodic = false;
+        int s = 2;
+
+        {
+            PyObject *arg1 = nullptr;
+            if (!PyArg_ParseTuple(args, "O", &arg1, nullptr))
+                return nullptr;
+            ref_image = cast_to_2d_np_array(arg1, "image");
+        }
+
+        if (kwargs) {
+            for (auto key_and_value : Kwargs(kwargs)) {
+                if ("threshold" == key_and_value.first) {
+                    thresholds = cast_to_vector(key_and_value.second, "threshold");
+                } else if ("boundary" == key_and_value.first) {
+                    string v;
+                    bool is_string = false;
+                    try {
+                        v = to_utf8_string(key_and_value.second);
+                        is_string = true;
+                    } catch(std::logic_error const &) {
+                        // not a string
+                    }
+
+                    if (is_string)
+                    {
+                        if (v != "periodic") {
+                            throw_value_error("illegal value for boundary keyword argument: %s", v.c_str());
+                        } else {
+                            periodic = true;
+                        }
+                    } else {
+                        auto padding = cast_to_vector(key_and_value.second, "boundary");
+                        if (padding.size() != 1u)
+                            throw_value_error("illegal value for boundary keyword argument, must be a Float or the string 'periodic'");
+                        padding_value = padding[0];
+                    }
+                } else if ("s" == key_and_value.first) {
+                    auto tmp = cast_to_vector(key_and_value.second, "s");
+                    if (tmp.size() != 1u)
+                        throw_value_error("illegal value for s argument, must be a single integer");
+                    else if (ceilf(tmp[0]) != tmp[0])
+                        throw_value_error("illegal value for s argument, s must be an integer");
+                    else if (tmp[0] < 0)
+                        throw_value_error("illegal value for s argument, s must be a non-negative integer");
+                    else if (tmp[0] == 1)
+                        throw_value_error("illegal value for s argument, s cannot be 1");
+                    else if (tmp[0] > MAX_S)
+                        throw_value_error("illegal value for s argument, s needs to be smaller than %i", int(MAX_S) + 1);
+                    s = tmp[0];
+                } else {
+                    throw_value_error("illegal keyword argument: %s", key_and_value.first.c_str());
+                }
+            }
+        }
+
+        auto const original = NumpyArrayPhoto(ref_image.reinterpret<PyArrayObject>());
+        auto const padded = periodic ? make_periodic_view(original) : make_padded_view(original, padding_value);
+        UniquePyPtr np_array;
+
+        for (size_t t = 0; t != thresholds.size(); ++t)
+        {
+            complex_image_t mink_map;
+            minkowski_map_interpolated_marching_squares(&mink_map, padded, thresholds.at(t), s);
+
+            int const width = mink_map.width() - periodic, height = mink_map.height() - periodic;
+            if(!np_array)
+                np_array = np_make_new_3d_array(thresholds.size(), width, height, NPY_CDOUBLE);
+            for(int j = 0; j != height; ++j) {
+                for(int i = 0; i != width; ++i) {
+                    np_set_complex(np_array, t, i, j, mink_map(i + periodic, j + periodic));
+                }
+            }
+        }
+
+        return np_array.release();
     }
 
     static PyMethodDef mymethods[] = {
@@ -420,6 +510,20 @@ namespace {
          "imt_for_image(seeds, threshold=value)\n"
          "Returns a dictionary that contains the metrics.\n"
          "The unit of scale is assumed to be 1 pixel.\n"},
+        {"minkowski_map_for_image", WRAP_IN_PARACHUTE(compute_minkowski_map),
+         METH_VARARGS | METH_KEYWORDS,
+         "minkowski_map_for_image(image)\n"
+         "minkowski_map_for_image(image, threshold)\n"
+         "minkowski_map_for_image(image, threshold, boundary = 0.4)\n"
+         "Computes the psi_2 Minkowski map.\n"
+         "Returns a 3D array len(threshold) x (width+1) x (height+1) of complex numbers.\n"
+         "Optionally, the value of the padding pixel can be specified.\n"
+         "minkowski_map_for_image(image, threshold, boundary = 'periodic')\n"
+         "Computes the psi_2 Minkowski map with periodic boundary conditions.\n"
+         "Returns a 3D array len(threshold) x width x height of complex numbers.\n"
+         "The first pixel, at index (0, 0), corresponds to the physical coordinate (1, 1),\n"
+         "i.e., the neighborhood composed of the pixels (0, 0), (0, 1), (1, 0), and (1, 1).\n"
+        },
         {nullptr, nullptr, 0, nullptr} // sentinel
     };
 } // anonymous namespace
